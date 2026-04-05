@@ -2,9 +2,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Categories from "./pages/Categories"; // <-- import Categories page
-import ProtectedRoute from "./components/ProtectedRoute";
+import Categories from "./pages/Categories";
+import Products from "./pages/Products"; // only if this file exists
+import Sales from "./pages/Sales";       // only if this file exists
+import Utang from "./pages/Utang";       // only if this file exists
+import Expenses from "./pages/Expenses"; // only if this file exists
 
+import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <BrowserRouter>
@@ -31,12 +35,11 @@ function App() {
           }
         />
 
-        {/* Future routes */}
         <Route
           path="/products"
           element={
             <ProtectedRoute>
-              {/* <Products /> */}
+              <Products /> {/* replace with placeholder <div>Products Page</div> if not ready */}
             </ProtectedRoute>
           }
         />
@@ -45,7 +48,7 @@ function App() {
           path="/sales"
           element={
             <ProtectedRoute>
-              {/* <Sales /> */}
+              <Sales /> {/* or <div>Sales Page</div> */}
             </ProtectedRoute>
           }
         />
@@ -54,7 +57,7 @@ function App() {
           path="/utang"
           element={
             <ProtectedRoute>
-              {/* <Utang /> */}
+              <Utang /> {/* or <div>Utang Page</div> */}
             </ProtectedRoute>
           }
         />
@@ -63,7 +66,7 @@ function App() {
           path="/expenses"
           element={
             <ProtectedRoute>
-              {/* <Expenses /> */}
+              <Expenses /> {/* or <div>Expenses Page</div> */}
             </ProtectedRoute>
           }
         />

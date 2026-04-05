@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 export class DashboardService {
   constructor(private dataSource: DataSource) {}
 
+  /** Get dashboard stats safely */
   async getDashboard() {
     const totalProducts = await this.dataSource.query(
       `SELECT COUNT(*) as totalProducts FROM products`
@@ -19,9 +20,9 @@ export class DashboardService {
     );
 
     return {
-      totalProducts: totalProducts[0].totalProducts,
-      lowStock: lowStock[0].lowStock,
-      salesToday: salesToday[0].salesToday || 0,
+      totalProducts: Number(totalProducts[0].totalProducts) || 0,
+      lowStock: Number(lowStock[0].lowStock) || 0,
+      salesToday: Number(salesToday[0].salesToday) || 0,
     };
   }
 }

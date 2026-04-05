@@ -10,14 +10,13 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /** Login user safely */
   async login(username: string, password: string) {
     const user = await this.usersService.findOne(username);
-    console.log('User from DB:', user);
 
     if (!user) throw new UnauthorizedException('Invalid username or password');
 
     const isValid = await bcrypt.compare(password, user.password);
-    console.log('Password valid?', isValid);
 
     if (!isValid) throw new UnauthorizedException('Invalid username or password');
 

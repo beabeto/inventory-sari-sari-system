@@ -1,25 +1,26 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
+    "module": "nodenext",                   // Keep Node ESM module support
+    "moduleResolution": "nodenext",         // Correct resolution for Node
+    "resolvePackageJsonExports": true,      // Required for nodenext
+    "esModuleInterop": true,                // ✅ Must be true for `import supertest from 'supertest'`
+    "allowSyntheticDefaultImports": true,  // ✅ Helps TypeScript understand default imports
     "isolatedModules": true,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "skipLibCheck": true,
+    "skipLibCheck": true,                   // ✅ Avoids type conflicts in node_modules
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "exclude": ["node_modules", "dist"]       // Add this to avoid compiling node_modules
 }

@@ -1,12 +1,20 @@
+// src/dashboard/dashboard.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardService } from './dashboard.service';
+import { DataSource } from 'typeorm';
 
 describe('DashboardService', () => {
   let service: DashboardService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DashboardService],
+      providers: [
+        DashboardService,
+        {
+          provide: DataSource,
+          useValue: {}, // mock database connection
+        },
+      ],
     }).compile();
 
     service = module.get<DashboardService>(DashboardService);

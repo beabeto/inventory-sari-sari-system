@@ -6,7 +6,7 @@ const request = require('supertest');
 import { AppModule } from '../src/app.module';
 import { UsersService } from '../src/users/users.service';
 
-describe('Auth (e2e)', () => {
+describe('AuthController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
@@ -31,8 +31,8 @@ describe('Auth (e2e)', () => {
     await app.close();
   });
 
-  it('/auth/login (POST) - success', async () => {
-    const response = await request(app.getHttpServer())
+  it('login success', async () => {
+    const res = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
         username: 'admin',
@@ -40,16 +40,16 @@ describe('Auth (e2e)', () => {
       })
       .expect(201); // ✅ MATCHES YOUR BACKEND
 
-    expect(response.body).toHaveProperty('access_token');
-    expect(typeof response.body.access_token).toBe('string');
+    expect(res.body).toHaveProperty('access_token');
+    expect(typeof res.body.access_token).toBe('string');
   });
 
-  it('/auth/login (POST) - fail', async () => {
+  it('login failure', async () => {
     await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        username: 'wronguser',
-        password: 'wrongpass',
+        username: 'admin',
+        password: 'wrongpassword',
       })
       .expect(401);
   });

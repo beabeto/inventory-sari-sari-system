@@ -1,11 +1,15 @@
 import { Navigate } from "react-router-dom";
 import { isAuthenticated } from "../api/auth";
+import React from "react";
 
-export default function ProtectedRoute({ children }: any) {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
 
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (!isAuthenticated()) {
     return <Navigate to="/login" />;
   }
 
-  return children;
+  return <>{children}</>; // wrap in fragment for safety
 }

@@ -15,4 +15,11 @@ describe('UsersController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  describe('UsersService (placeholder)', () => {
+  it('placeholder test should pass', () => {
+    expect(true).toBe(true);
+  });
 });
+});
+

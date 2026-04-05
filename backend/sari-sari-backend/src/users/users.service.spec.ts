@@ -1,3 +1,4 @@
+// src/users/users.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 
@@ -6,7 +7,13 @@ describe('UsersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService],
+      providers: [
+        UsersService,
+        {
+          provide: 'UserRepository', // token used in service
+          useValue: {}, // mock repository
+        },
+      ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
