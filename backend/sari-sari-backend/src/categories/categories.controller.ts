@@ -8,12 +8,12 @@ export class CategoriesController {
 
   @Get()
   async findAll(): Promise<Category[]> {
-    return await this.categoriesService.findAll();
+    return this.categoriesService.findAll();
   }
 
   @Post()
   async create(@Body() body: { name: string }): Promise<Category> {
-    return await this.categoriesService.create(body.name);
+    return this.categoriesService.create(body.name);
   }
 
   @Put(':id')
@@ -21,7 +21,7 @@ export class CategoriesController {
     @Param('id') id: string,
     @Body() body: { name: string },
   ): Promise<Category> {
-    return await this.categoriesService.update(+id, body.name);
+    return this.categoriesService.update(+id, body.name);
   }
 
   @Delete(':id')
