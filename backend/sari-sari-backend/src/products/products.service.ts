@@ -2,99 +2,69 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
-import { Brand } from '../brands/brand.entity';
 import { Category } from '../categories/category.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
-    private productsRepo: Repository<Product>,
-
-    @InjectRepository(Brand)
-    private brandsRepo: Repository<Brand>,
+    private repo: Repository<Product>,
 
     @InjectRepository(Category)
-    private categoriesRepo: Repository<Category>,
+    private categoryRepo: Repository<Category>,
   ) {}
 
-  /** GET all products (with filters) */
-  async findAll(categoryId?: number, brandId?: number): Promise<any[]> {
-    const query = this.productsRepo.createQueryBuilder('product')
-      .leftJoinAndSelect('product.brand', 'brand')
-      .leftJoinAndSelect('product.category', 'category');
+  async findAll(categoryId?: number) {
+    const query = this.repo.createQueryBuilder('p')
+      .leftJoinAndSelect('p.category', 'category');
 
     if (categoryId) {
-      query.andWhere('product.category_id = :categoryId', { categoryId });
+      query.andWhere('p.category_id = :categoryId', { categoryId });
     }
 
-    if (brandId) {
-      query.andWhere('product.brand_id = :brandId', { brandId });
-    }
+    const data = await query.getMany();
 
-    const products = await query.getMany();
-
-    return products.map(p => ({
+    return data.map(p => ({
       product_id: p.product_id,
       name: p.name,
       stock: p.stock,
       category_id: p.category_id,
-      brand_id: p.brand_id,
-      brandName: p.brand?.name || '',
       categoryName: p.category?.name || '',
     }));
   }
 
-  /** CREATE */
-  async create(data: {
-    name: string;
-    stock: number;
-    brand_id: number;
-    category_id: number;
-  }): Promise<Product> {
-    const brand = await this.brandsRepo.findOneBy({ brand_id: data.brand_id });
-    const category = await this.categoriesRepo.findOneBy({ category_id: data.category_id });
+  async create(data: { name: string; stock: number; category_id: number }) {
+    const category = await this.categoryRepo.findOneBy({
+      category_id: data.category_id,
+    });
 
-    if (!brand) throw new NotFoundException('Brand not found');
     if (!category) throw new NotFoundException('Category not found');
 
-    const product = this.productsRepo.create({
+    const product = this.repo.create({
       name: data.name,
       stock: data.stock,
-      brand,
       category,
     });
 
-    return this.productsRepo.save(product);
+    return this.repo.save(product);
   }
 
-  /** UPDATE */
-  async update(id: number, data: {
-    name: string;
-    stock: number;
-    brand_id: number;
-    category_id: number;
-  }): Promise<Product> {
-    const product = await this.productsRepo.findOneBy({ product_id: id });
+  async update(id: number, data: { name: string; stock: number; category_id: number }) {
+    const product = await this.repo.findOneBy({ product_id: id });
     if (!product) throw new NotFoundException('Product not found');
 
-    const brand = await this.brandsRepo.findOneBy({ brand_id: data.brand_id });
-    const category = await this.categoriesRepo.findOneBy({ category_id: data.category_id });
-
-    if (!brand) throw new NotFoundException('Brand not found');
-    if (!category) throw new NotFoundException('Category not found');
+    const category = await this.categoryRepo.findOneBy({
+      category_id: data.category_id,
+    });
 
     product.name = data.name;
     product.stock = data.stock;
-    product.brand = brand;
-    product.category = category;
+    product.category = category!;
 
-    return this.productsRepo.save(product);
+    return this.repo.save(product);
   }
 
-  /** DELETE */
-  async remove(id: number): Promise<void> {
-    const result = await this.productsRepo.delete(id);
-    if (result.affected === 0) throw new NotFoundException('Product not found');
+  async remove(id: number) {
+    await this.repo.delete(id);
   }
 }

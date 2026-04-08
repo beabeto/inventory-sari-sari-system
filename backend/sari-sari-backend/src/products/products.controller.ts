@@ -1,31 +1,27 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { Product } from './product.entity';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private service: ProductsService) {}
 
   @Get()
-  async findAll(@Query('category_id') categoryId?: string, @Query('brand_id') brandId?: string): Promise<Product[]> {
-    return this.productsService.findAll(
-      categoryId ? +categoryId : undefined,
-      brandId ? +brandId : undefined,
-    );
+  findAll(@Query('category_id') categoryId?: string) {
+    return this.service.findAll(categoryId ? +categoryId : undefined);
   }
 
   @Post()
-  async create(@Body() body: { name: string; stock: number; brand_id: number; category_id: number }): Promise<Product> {
-    return this.productsService.create(body);
+  create(@Body() body: { name: string; stock: number; category_id: number }) {
+    return this.service.create(body);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() body: { name: string; stock: number; brand_id: number; category_id: number }): Promise<Product> {
-    return this.productsService.update(+id, body);
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.service.update(+id, body);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.productsService.remove(+id);
+  remove(@Param('id') id: string) {
+    return this.service.remove(+id);
   }
 }

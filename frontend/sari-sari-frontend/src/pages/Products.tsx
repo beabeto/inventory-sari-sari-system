@@ -1,19 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { logout } from "../api/auth";
 
-// --- INTERFACES ---
 interface Category {
   category_id: number;
   name: string;
-  productCount?: number;
-  totalStock?: number;
-}
-
-interface Brand {
-  brand_id: number;
-  name: string;
-  category_id: number;
 }
 
 interface Product {
@@ -21,356 +11,207 @@ interface Product {
   name: string;
   stock: number;
   category_id: number;
-  brand_id: number;
-  category?: Category;
-  brand?: Brand;
+  price?: number;
 }
 
 export default function Products() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [newProductName, setNewProductName] = useState("");
-  const [newProductStock, setNewProductStock] = useState(0);
-  const [newProductBrand, setNewProductBrand] = useState<number | null>(null);
-  const [newBrandName, setNewBrandName] = useState("");
+
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState("");
+  const [stock, setStock] = useState(0);
+  const [price, setPrice] = useState(0);
+
   const [search, setSearch] = useState("");
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState("");
-
-  const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
-  };
-
-  // --- FETCH ---
-  const fetchCategories = () => {
-    axios
-      .get("http://localhost:3000/categories") // ✅ fixed endpoint
-      .then((res) => setCategories(res.data))
-      .catch((err) => console.error("Failed to fetch categories:", err));
-  };
-
-  const fetchBrands = (categoryId?: number) => {
-    const url = categoryId
-      ? `http://localhost:3000/brands?category_id=${categoryId}`
-      : "http://localhost:3000/brands";
-
-    axios.get(url).then((res) => setBrands(res.data));
-  };
-
-  const fetchProducts = (categoryId?: number) => {
-    const url = categoryId
-      ? `http://localhost:3000/products?category_id=${categoryId}`
-      : "http://localhost:3000/products";
-
-    axios.get(url).then((res) => setProducts(res.data));
-  };
 
   useEffect(() => {
     fetchCategories();
-    fetchBrands();
     fetchProducts();
   }, []);
 
-  // --- CATEGORY FILTER ---
-  const handleCategoryChange = (id: number) => {
-    setSelectedCategory(id);
-    fetchBrands(id);
-    fetchProducts(id);
+  const fetchCategories = async () => {
+    const res = await axios.get("http://localhost:3000/categories");
+    setCategories(res.data);
   };
 
-  // --- ADD PRODUCT ---
-  const addProduct = () => {
-    if (!newProductName || !newProductBrand || !selectedCategory) return;
-
-    axios
-      .post("http://localhost:3000/products", {
-        name: newProductName,
-        stock: newProductStock,
-        brand_id: newProductBrand,
-        category_id: selectedCategory,
-      })
-      .then(() => {
-        setNewProductName("");
-        setNewProductStock(0);
-        fetchProducts(selectedCategory);
-        fetchCategories(); // update category stock
-      });
+  const fetchProducts = async (catId?: number) => {
+    const url = catId
+      ? `http://localhost:3000/products?category_id=${catId}`
+      : "http://localhost:3000/products";
+    const res = await axios.get(url);
+    setProducts(res.data);
   };
 
-  // --- ADD BRAND ---
-  const addBrand = () => {
-    if (!newBrandName || !selectedCategory) return;
+  const addProduct = async () => {
+    if (!name || selectedCategory === null) return alert("Fill all fields");
 
-    axios
-      .post("http://localhost:3000/brands", {
-        name: newBrandName,
-        category_id: selectedCategory,
-      })
-      .then(() => {
-        setNewBrandName("");
-        fetchBrands(selectedCategory);
-      });
-  };
-
-  // --- DELETE ---
-  const deleteProduct = (id: number) => {
-    if (!confirm("Delete product?")) return;
-
-    axios.delete(`http://localhost:3000/products/${id}`).then(() => {
-      fetchProducts(selectedCategory || undefined);
-      fetchCategories();
+    await axios.post("http://localhost:3000/products", {
+      name,
+      stock,
+      price,
+      category_id: selectedCategory,
     });
+
+    setShowModal(false);
+    setName("");
+    setStock(0);
+    setPrice(0);
+
+    fetchProducts(selectedCategory);
   };
 
-  // --- STOCK CONTROL (+ / -) ---
-  const updateStock = (prod: Product, change: number) => {
-    const newStock = prod.stock + change;
-    if (newStock < 0) return;
-
-    axios
-      .put(`http://localhost:3000/products/${prod.product_id}`, {
-        name: prod.name,
-        stock: newStock,
-        category_id: prod.category_id,
-        brand_id: prod.brand_id,
-      })
-      .then(() => {
-        fetchProducts(selectedCategory || undefined);
-        fetchCategories();
-      });
-  };
-
-  // --- EDIT ---
-  const startEdit = (p: Product) => {
-    setEditingId(p.product_id);
-    setEditingName(p.name);
-  };
-
-  const saveEdit = (id: number, prod: Product) => {
-    axios
-      .put(`http://localhost:3000/products/${id}`, {
-        name: editingName,
-        stock: prod.stock,
-        category_id: prod.category_id,
-        brand_id: prod.brand_id,
-      })
-      .then(() => {
-        setEditingId(null);
-        fetchProducts(selectedCategory || undefined);
-      });
-  };
-
-  const filteredProducts = products.filter((p) =>
+  const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+
   return (
-    <div style={ui.fullscreenWrapper}>
+    <div className="flex h-screen bg-blue-50 font-sans">
       {/* Sidebar */}
-      <aside style={ui.sidebar}>
+      <aside className="w-60 bg-blue-900 text-white p-5 flex flex-col justify-between">
         <div>
-          <div style={ui.logo}>Sari-sari Store</div>
-          <nav style={ui.nav}>
-            <a href="/dashboard" style={ui.navItem}>
-              Dashboard
-            </a>
-            <a href="/categories" style={ui.navItem}>
-              Categories
-            </a>
-            <a href="/products" style={{ ...ui.navItem, ...ui.navActive }}>
-              Products
-            </a>
-            <a href="/sales" style={ui.navItem}>Sales</a>
-            <a href="/utang" style={ui.navItem}>Utang</a>
-            <a href="/expenses" style={ui.navItem}>Expenses</a>
+          <h1 className="text-xl font-bold mb-10">Sari-sari Store</h1>
+          <nav className="space-y-2">
+            {["Dashboard", "Categories", "Products", "Sales"].map((item) => (
+              <div
+                key={item}
+                className={`p-3 rounded-lg cursor-pointer ${
+                  item === "Products"
+                    ? "bg-blue-500"
+                    : "text-blue-200 hover:bg-blue-700"
+                }`}
+              >
+                {item}
+              </div>
+            ))}
           </nav>
         </div>
-        <button style={ui.logoutBtn} onClick={handleLogout}>
+
+        <button className="bg-indigo-500 p-2 rounded-lg hover:bg-indigo-600">
           Logout
         </button>
       </aside>
 
-      {/* MAIN */}
-      <main style={ui.mainContent}>
-        <header style={ui.header}>
-          <div>
-            <h1 style={ui.title}>Products</h1>
-            <p style={ui.subtitle}>Manage your store inventory</p>
+      {/* Main */}
+      <main className="flex-1 p-8 flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-blue-900">Products</h2>
+          <div className="bg-white px-6 py-3 rounded-xl shadow">
+            <p className="text-sm text-gray-500">Total Stocks</p>
+            <p className="text-xl font-bold">{totalStock}</p>
           </div>
+        </div>
 
-          <div style={ui.summaryCard}>
-            <div style={ui.summaryIcon}>📦</div>
-            <div>
-              <div style={ui.summaryLabel}>Total Products</div>
-              <div style={ui.summaryValue}>{products.length}</div>
-            </div>
-          </div>
-        </header>
-
-        {/* ACTION BAR */}
-        <div style={ui.actionBar}>
-          <div style={ui.addBox}>
-            {/* CATEGORY */}
-            <select
-              style={ui.input}
-              value={selectedCategory || ""}
-              onChange={(e) => handleCategoryChange(Number(e.target.value))}
+        {/* Actions */}
+        <div className="flex justify-between mb-4">
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
-              <option value="">Select Category</option>
+              + Add Product
+            </button>
+
+            <select
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setSelectedCategory(val);
+                fetchProducts(val);
+              }}
+              className="px-3 py-2 rounded-lg border"
+            >
+              <option value="">All Categories</option>
               {categories.map((c) => (
                 <option key={c.category_id} value={c.category_id}>
-                  {c.name} ({c.productCount || 0})
+                  {c.name}
                 </option>
               ))}
             </select>
-
-            {/* NEW BRAND */}
-            <input
-              style={ui.input}
-              placeholder="New Brand"
-              value={newBrandName}
-              onChange={(e) => setNewBrandName(e.target.value)}
-            />
-            <button onClick={addBrand} style={ui.btnPrimary}>
-              + Brand
-            </button>
-
-            {/* BRAND SELECT */}
-            <select
-              style={ui.input}
-              onChange={(e) => setNewProductBrand(Number(e.target.value))}
-            >
-              <option value="">Select Brand</option>
-              {brands.map((b) => (
-                <option key={b.brand_id} value={b.brand_id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-
-            {/* PRODUCT NAME */}
-            <input
-              style={ui.input}
-              placeholder="Product name"
-              value={newProductName}
-              onChange={(e) => setNewProductName(e.target.value)}
-            />
-
-            {/* STOCK */}
-            <input
-              style={ui.input}
-              type="number"
-              value={newProductStock}
-              onChange={(e) => setNewProductStock(Number(e.target.value))}
-            />
-
-            <button onClick={addProduct} style={ui.btnPrimary}>
-              + Add
-            </button>
           </div>
 
-          {/* SEARCH */}
           <input
-            style={{ ...ui.input, width: "250px" }}
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="px-4 py-2 rounded-full border w-60"
           />
         </div>
 
-        {/* TABLE */}
-        <div style={ui.tableContainer}>
-          <table style={ui.table}>
-            <thead>
-              <tr style={ui.thead}>
-                <th style={ui.th}>Category</th>
-                <th style={ui.th}>Brand</th>
-                <th style={ui.th}>Product Name</th>
-                <th style={ui.th}>Stocks</th>
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow overflow-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-100 sticky top-0">
+              <tr>
+                <th className="p-4">Name</th>
+                <th className="p-4">Price</th>
+                <th className="p-4">Stock</th>
+                <th className="p-4">Total</th>
               </tr>
             </thead>
-
             <tbody>
-              {filteredProducts.map((p) => (
-                <tr key={p.product_id}>
-                  <td style={ui.td}>
-                    {editingId === p.product_id ? (
-                      <input
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                      />
-                    ) : (
-                      <b>{p.name}</b>
-                    )}
-                  </td>
-
-                  <td style={ui.td}>
-                    <button onClick={() => updateStock(p, -1)}>-</button>{" "}
-                    {p.stock} <button onClick={() => updateStock(p, +1)}>+</button>
-                  </td>
-
-                  <td style={ui.td}>{p.category?.name}</td>
-                  <td style={ui.td}>{p.brand?.name}</td>
-
-                  <td style={ui.td}>
-                    {editingId === p.product_id ? (
-                      <button onClick={() => saveEdit(p.product_id, p)}>Save</button>
-                    ) : (
-                      <button onClick={() => startEdit(p)}>Edit</button>
-                    )}
-                    <button onClick={() => deleteProduct(p.product_id)}>Delete</button>
+              {filtered.map((p) => (
+                <tr key={p.product_id} className="border-t">
+                  <td className="p-4">{p.name}</td>
+                  <td className="p-4">₱{p.price || 0}</td>
+                  <td className="p-4">{p.stock}</td>
+                  <td className="p-4 font-semibold">
+                    ₱{(p.price || 0) * p.stock}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-
-          {filteredProducts.length === 0 && (
-            <div style={ui.emptyState}>No products found</div>
-          )}
         </div>
       </main>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-80 space-y-3">
+            <h3 className="font-bold text-lg">Add Product</h3>
+
+            <input
+              placeholder="Name"
+              className="w-full border p-2 rounded"
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <input
+              type="number"
+              placeholder="Price"
+              className="w-full border p-2 rounded"
+              onChange={(e) => setPrice(Number(e.target.value))}
+            />
+
+            <input
+              type="number"
+              placeholder="Stock"
+              className="w-full border p-2 rounded"
+              onChange={(e) => setStock(Number(e.target.value))}
+            />
+
+            <div className="flex gap-2">
+              <button
+                onClick={addProduct}
+                className="flex-1 bg-blue-600 text-white p-2 rounded"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 bg-gray-400 text-white p-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-
-
-const ui: { [key: string]: React.CSSProperties } = {
-  fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
-  sidebar: { width: "240px", background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
-  logo: { fontSize: "22px", fontWeight: 800, marginBottom: "40px", textAlign: "center" },
-  nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navItem: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px", fontSize: "14px" },
-  navActive: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { padding: "12px", background: "#644ceb", color: "white", borderRadius: "10px", cursor: "pointer", fontWeight: 600 },
-  mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" },
-  title: { fontSize: "28px", color: "#1e3a8a", margin: 0, fontWeight: 800 },
-  subtitle: { color: "#60a5fa", margin: "5px 0 0 0" },
-  summaryCard: { background: "white", padding: "15px 25px", borderRadius: "15px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" },
-  summaryIcon: { fontSize: "24px", background: "#eff6ff", padding: "10px", borderRadius: "12px" },
-  summaryLabel: { fontSize: "12px", color: "#64748b", textTransform: "uppercase", fontWeight: 700 },
-  summaryValue: { fontSize: "20px", fontWeight: 800, color: "#1e293b" },
-  actionBar: { display: "flex", justifyContent: "space-between", marginBottom: "25px", alignItems: "center" },
-  addBox: { display: "flex", gap: "10px", flexWrap: 'wrap', alignItems: 'center' },
-  input: { padding: "12px 15px", borderRadius: "10px", border: "1px solid #dbeafe", outline: "none", fontSize: "14px", color: 'black', backgroundColor: 'white' },
-  searchIcon: { position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 },
-  btnPrimary: { background: "#2563eb", color: "white", border: "none", padding: "0 20px", borderRadius: "10px", fontWeight: 600, cursor: "pointer" },
-  tableContainer: { background: "white", borderRadius: "20px", boxShadow: "0 10px 25px rgba(30, 58, 138, 0.05)", overflow: "hidden" },
-  table: { width: "100%", borderCollapse: "collapse" },
-  thead: { background: "#f8fafc", borderBottom: "1px solid #e2e8f0" },
-  th: { padding: "15px 25px", textAlign: "left", fontSize: "12px", color: "#64748b", textTransform: "uppercase" },
-  td: { padding: "15px 25px", borderBottom: "1px solid #f1f5f9", fontSize: "14px" },
-  idBadge: { background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", color: "#64748b", fontSize: "12px" },
-  btnEdit: { background: "none", border: "1px solid #bfdbfe", color: "#2563eb", padding: "6px 12px", borderRadius: "6px", marginRight: "8px", cursor: "pointer" },
-  btnDelete: { background: "none", border: "1px solid #fecaca", color: "#ef4444", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" },
-  btnSave: { background: "#16a34a", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", marginRight: "8px" },
-  btnCancel: { background: "#d1d5db", color: "black", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" },
-  emptyState: { padding: "40px", textAlign: "center", color: "#94a3b8" }
-};
