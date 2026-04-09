@@ -10,6 +10,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 // import { CategoriesModule } from './categories/categories.module';
 // import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -33,8 +34,7 @@ import { CategoriesModule } from './categories/categories.module';
     }),
     DashboardModule,
     CategoriesModule,
-    // CategoriesModule, // uncomment when created
-    // ProductsModule,   // uncomment when created
+    ProductsModule,
   ],
   controllers: [AuthController],
   providers: [UsersService, AuthService],

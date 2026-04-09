@@ -5,17 +5,18 @@ import { logout } from "../api/auth";
 interface Category {
   category_id: number;
   name: string;
-  productCount?: number; // Optional: product count per category
-  totalStock?: number;   // Optional: stock per category
+  productCount: number; // number of products in category
+  totalStock: number;   // total stock of products in category
 }
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [search, setSearch] = useState("");
-
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
+
+  const API_URL = "http://localhost:3000";
 
   const handleLogout = () => {
     logout();
@@ -23,11 +24,20 @@ export default function Categories() {
   };
 
   // --- FETCH CATEGORIES ---
-  const fetchCategories = () => {
-    axios
-      .get("http://localhost:3000/categories")
-      .then((res) => setCategories(res.data))
-      .catch((err) => console.error(err));
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/categories`);
+      // Map raw backend fields to Category interface
+      const mappedCategories = res.data.map((cat: any) => ({
+        category_id: cat.category_id ?? cat.category_category_id,
+        name: cat.name ?? cat.category_name,
+        productCount: Number(cat.productCount ?? cat.category_productCount ?? 0),
+        totalStock: Number(cat.totalStock ?? cat.totalStock ?? 0),
+      }));
+      setCategories(mappedCategories);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -37,23 +47,20 @@ export default function Categories() {
   // --- ADD CATEGORY ---
   const addCategory = () => {
     if (!newCategory.trim()) return;
-
-    axios
-      .post("http://localhost:3000/categories", { name: newCategory })
+    axios.post(`${API_URL}/categories`, { name: newCategory })
       .then(() => {
         setNewCategory("");
         fetchCategories();
       })
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   };
 
   // --- DELETE CATEGORY ---
   const deleteCategory = (id: number) => {
     if (!confirm("Delete this category?")) return;
-    axios
-      .delete(`http://localhost:3000/categories/${id}`)
+    axios.delete(`${API_URL}/categories/${id}`)
       .then(() => fetchCategories())
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   };
 
   // --- EDIT CATEGORY ---
@@ -61,31 +68,21 @@ export default function Categories() {
     setEditingId(cat.category_id);
     setEditingName(cat.name);
   };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
-
+  const cancelEdit = () => { setEditingId(null); setEditingName(""); };
   const saveEdit = (id: number) => {
     if (!editingName.trim()) return;
-    axios
-      .put(`http://localhost:3000/categories/${id}`, { name: editingName })
-      .then(() => {
-        cancelEdit();
-        fetchCategories();
-      })
-      .catch((err) => console.error(err));
+    axios.put(`${API_URL}/categories/${id}`, { name: editingName })
+      .then(() => { cancelEdit(); fetchCategories(); })
+      .catch(err => console.error(err));
   };
 
   // --- FILTER CATEGORIES ---
-  const filteredCategories = categories.filter((cat) =>
+  const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div style={ui.fullscreenWrapper}>
-      {/* Sidebar */}
       <aside style={ui.sidebar}>
         <div>
           <div style={ui.logo}>Sari-sari Store</div>
@@ -101,91 +98,77 @@ export default function Categories() {
         <button style={ui.logoutBtn} onClick={handleLogout}>Logout</button>
       </aside>
 
-      {/* Main Content */}
       <main style={ui.mainContent}>
         <header style={ui.header}>
           <div>
             <h1 style={ui.title}>Categories</h1>
             <p style={ui.subtitle}>Manage and organize your inventory groupings</p>
           </div>
-          <div style={ui.summaryCard}>
-            <div style={ui.summaryIcon}>📂</div>
-            <div>
-              <div style={ui.summaryLabel}>Total Categories</div>
-              <div style={ui.summaryValue}>{categories.length}</div>
-            </div>
-          </div>
         </header>
 
-        {/* Action Bar */}
         <div style={ui.actionBar}>
           <div style={ui.addBox}>
             <input
               type="text"
               placeholder="Enter new category name..."
               value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
+              onChange={e => setNewCategory(e.target.value)}
               style={ui.input}
             />
             <button onClick={addCategory} style={ui.btnPrimary}>+ Add Category</button>
           </div>
-
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ ...ui.input, width: '300px', paddingLeft: '40px', backgroundColor: 'white' }}
-            />
-            <span style={ui.searchIcon}>🔍</span>
-          </div>
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ ...ui.input, width: '300px' }}
+          />
         </div>
 
-        {/* Categories Table */}
         <div style={ui.tableContainer}>
           <table style={ui.table}>
             <thead>
               <tr style={ui.thead}>
                 <th style={ui.th}>ID</th>
                 <th style={ui.th}>Category Name</th>
-                <th style={ui.th}>Products</th>
-                <th style={ui.th}>Stock</th>
+                <th style={ui.th}>Products Count</th>
+                <th style={ui.th}>Stock Count</th>
                 <th style={{ ...ui.th, textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredCategories.map((cat) => (
+              {filteredCategories.map(cat => (
                 <tr key={cat.category_id} style={ui.tr}>
-                  <td style={ui.td}><span style={ui.idBadge}>#{cat.category_id}</span></td>
-                  <td style={ui.td}>
+                  <td style={{ ...ui.td, color: '#2563eb' }}>#{cat.category_id}</td>
+                  <td style={{ ...ui.td, color: '#1e3a8a' }}>
                     {editingId === cat.category_id ? (
                       <input
                         autoFocus
                         value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onKeyDown={(e) => {
+                        onChange={e => setEditingName(e.target.value)}
+                        onKeyDown={e => {
                           if (e.key === "Enter") saveEdit(cat.category_id);
                           if (e.key === "Escape") cancelEdit();
                         }}
                         style={{ ...ui.input, width: '70%' }}
                       />
                     ) : (
-                      <span style={{ fontWeight: 600, color: '#1e3a8a' }}>{cat.name}</span>
+                      cat.name
                     )}
                   </td>
-                  <td style={ui.td}>{cat.productCount || 0}</td>
-                  <td style={ui.td}>{cat.totalStock || 0}</td>
+                  <td style={{ ...ui.td, color: '#16a34a', fontWeight: 600 }}>{cat.productCount}</td>
+                  <td style={{ ...ui.td, color: '#dc2626', fontWeight: 600 }}>{cat.totalStock}</td>
                   <td style={{ ...ui.td, textAlign: 'right' }}>
                     {editingId === cat.category_id ? (
                       <>
-                        <button onClick={() => saveEdit(cat.category_id)} style={ui.btnSave}>Save</button>
-                        <button onClick={cancelEdit} style={ui.btnCancel}>Cancel</button>
+                        <button style={ui.btnSave} onClick={() => saveEdit(cat.category_id)}>Save</button>
+                        <button style={ui.btnCancel} onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(cat)} style={ui.btnEdit}>Edit</button>
-                        <button onClick={() => deleteCategory(cat.category_id)} style={ui.btnDelete}>Delete</button>
+                        <button style={ui.btnEdit} onClick={() => startEdit(cat)}>Edit</button>
+                        <button style={ui.btnDelete} onClick={() => deleteCategory(cat.category_id)}>Delete</button>
                       </>
                     )}
                   </td>
