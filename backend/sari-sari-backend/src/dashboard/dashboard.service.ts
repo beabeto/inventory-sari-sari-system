@@ -5,24 +5,30 @@ import { DataSource } from 'typeorm';
 export class DashboardService {
   constructor(private dataSource: DataSource) {}
 
-  /** Get dashboard stats safely */
   async getDashboard() {
     const totalProducts = await this.dataSource.query(
-      `SELECT COUNT(*) as totalProducts FROM products`
+      `SELECT COUNT(*) as total FROM products`
+    );
+
+    const totalCategories = await this.dataSource.query(
+      `SELECT COUNT(*) as total FROM categories`
     );
 
     const lowStock = await this.dataSource.query(
-      `SELECT COUNT(*) as lowStock FROM products WHERE quantity <= reorder_level`
+      `SELECT COUNT(*) as total FROM products WHERE stock <= 5`
     );
 
     const salesToday = await this.dataSource.query(
-      `SELECT SUM(total_amount) as salesToday FROM sales WHERE DATE(created_at) = CURDATE()`
+      `SELECT COALESCE(SUM(total), 0) as total 
+       FROM sales 
+       WHERE DATE(sale_date) = CURDATE()`
     );
 
     return {
-      totalProducts: Number(totalProducts[0].totalProducts) || 0,
-      lowStock: Number(lowStock[0].lowStock) || 0,
-      salesToday: Number(salesToday[0].salesToday) || 0,
+      totalProducts: Number(totalProducts[0].total) || 0,
+      totalCategories: Number(totalCategories[0].total) || 0,
+      lowStock: Number(lowStock[0].total) || 0,
+      salesToday: Number(salesToday[0].total) || 0,
     };
   }
 }

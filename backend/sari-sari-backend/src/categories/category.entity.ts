@@ -3,13 +3,12 @@ import { Product } from '../products/product.entity';
 
 @Entity('categories')
 export class Category {
-  @PrimaryGeneratedColumn({ name: 'category_id' })
+  @PrimaryGeneratedColumn()
   category_id: number;
 
-  @Column({ name: 'name', type: 'varchar' })
+  @Column()
   name: string;
 
-  // ✅ FIX: Add this relation
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];
 }

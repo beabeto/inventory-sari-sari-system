@@ -11,6 +11,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 // import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { SalesModule } from './sales/sales.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ProductsModule } from './products/products.module';
     DashboardModule,
     CategoriesModule,
     ProductsModule,
+    SalesModule,
   ],
   controllers: [AuthController],
   providers: [UsersService, AuthService],

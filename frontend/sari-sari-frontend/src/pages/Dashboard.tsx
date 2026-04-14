@@ -2,12 +2,40 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { logout } from "../api/auth";
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+
+interface DashboardData {
+  totalProducts: number;
+  totalCategories: number;
+  lowStock: number;
+  salesToday: number;
+}
+
+interface Product {
+  product_id: number;
+  name: string;
+  stock: number;
+}
+
 export default function Dashboard() {
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardData>({
     totalProducts: 0,
+    totalCategories: 0,
     lowStock: 0,
     salesToday: 0,
   });
+
+  const [lowStockItems, setLowStockItems] = useState<Product[]>([]);
+
+  const API_URL = "http://localhost:3000";
 
   const handleLogout = () => {
     logout();
@@ -16,210 +44,282 @@ export default function Dashboard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/dashboard")
+      .get(`${API_URL}/dashboard`)
       .then((res) => setData(res.data))
-      .catch((err) => console.error("Dashboard fetch error:", err));
+      .catch((err) => console.error(err));
+
+    axios
+      .get(`${API_URL}/products/low-stock`)
+      .then((res) => setLowStockItems(res.data))
+      .catch((err) => console.error(err));
   }, []);
 
   return (
     <div style={ui.fullscreenWrapper}>
-      {/* Sidebar */}
+      {/* SIDEBAR */}
       <aside style={ui.sidebar}>
         <div>
           <div style={ui.logo}>Sari-sari Store</div>
+
           <nav style={ui.nav}>
-            <a href="/dashboard" style={{...ui.navItem, ...ui.navActive}}>Dashboard</a>
+            <a href="/dashboard" style={{ ...ui.navItem, ...ui.navActive }}>
+              Dashboard
+            </a>
             <a href="/categories" style={ui.navItem}>Categories</a>
             <a href="/products" style={ui.navItem}>Products</a>
+            <a href="/sales" style={ui.navItem}>Sales</a>
             <a href="/sales" style={ui.navItem}>Sales</a>
             <a href="/utang" style={ui.navItem}>Utang</a>
             <a href="/expenses" style={ui.navItem}>Expenses</a>
           </nav>
         </div>
+
         <button style={ui.logoutBtn} onClick={handleLogout}>
           Logout
         </button>
       </aside>
 
-      {/* Main Content */}
+      {/* MAIN */}
       <main style={ui.mainContent}>
+        {/* HEADER */}
         <header style={ui.header}>
           <div>
             <h1 style={ui.title}>Dashboard</h1>
-            <p style={ui.subtitle}>Welcome back to Sari-Sari Inventory System</p>
+            <p style={ui.subtitle}>Real-time store overview</p>
           </div>
-          <div style={ui.dateDisplay}>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+          <div style={ui.dateDisplay}>
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </div>
         </header>
 
-        {/* Stats Cards */}
+        {/* CARDS */}
         <div style={ui.cardGrid}>
-          <div style={ui.card}>
-            <div style={ui.cardIcon}>📦</div>
-            <div>
-              <h3 style={ui.cardLabel}>Total Products</h3>
-              <p style={ui.cardValue}>{data.totalProducts.toLocaleString()}</p>
-            </div>
+          <div style={{ ...ui.card, borderLeft: "5px solid #2563eb" }}>
+            <h3 style={ui.cardTitle}>Total Products</h3>
+            <p style={ui.cardValue}>{data.totalProducts}</p>
           </div>
 
-          <div style={{...ui.card, borderLeft: '5px solid #ef4444'}}>
-            <div style={{...ui.cardIcon, color: '#ef4444', background: '#fef2f2'}}>⚠️</div>
-            <div>
-              <h3 style={ui.cardLabel}>Low Stock</h3>
-              <p style={{...ui.cardValue, color: '#dc2626'}}>{data.lowStock}</p>
-            </div>
+          <div style={{ ...ui.card, borderLeft: "5px solid #7c3aed" }}>
+            <h3 style={ui.cardTitle}>Categories</h3>
+            <p style={ui.cardValue}>{data.totalCategories}</p>
           </div>
 
-          <div style={{...ui.card, borderLeft: '5px solid #22c55e'}}>
-            <div style={{...ui.cardIcon, color: '#22c55e', background: '#f0fdf4'}}>₱</div>
-            <div>
-              <h3 style={ui.cardLabel}>Sales Today</h3>
-              <p style={{...ui.cardValue, color: '#15803d'}}>₱{data.salesToday.toLocaleString()}</p>
-            </div>
+          <div style={{ ...ui.card, borderLeft: "5px solid #ef4444" }}>
+            <h3 style={ui.cardTitle}>Low Stock</h3>
+            <p style={{ ...ui.cardValue, color: "#ef4444" }}>
+              {data.lowStock}
+            </p>
+          </div>
+
+          <div style={{ ...ui.card, borderLeft: "5px solid #16a34a" }}>
+            <h3 style={ui.cardTitle}>Sales Today</h3>
+            <p style={{ ...ui.cardValue, color: "#16a34a" }}>
+              ₱{data.salesToday.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* Placeholder for future charts or recent activity */}
-        <div style={ui.placeholderSection}>
-          <h3 style={{color: '#1e3a8a', marginBottom: '15px'}}>Quick Overview</h3>
-          <div style={ui.chartPlaceholder}>
-            Recent activity and performance charts will appear here.
+        {/* CHART SECTION */}
+        <div style={ui.tableContainer}>
+          <div style={ui.sectionHeader}>
+            <h3 style={ui.sectionTitle}>Low Stock Analytics</h3>
           </div>
+
+          <div style={{ width: "100%", height: 320 }}>
+            <ResponsiveContainer>
+              <BarChart data={lowStockItems}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="stock" fill="#ef4444" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* LOW STOCK LIST */}
+        <div style={ui.tableContainer}>
+          <div style={ui.sectionHeader}>
+            <h3 style={ui.sectionTitle}>Low Stock Products</h3>
+          </div>
+
+          {lowStockItems.length === 0 ? (
+            <div style={ui.emptyState}>
+              All products are well stocked 🎉
+            </div>
+          ) : (
+            lowStockItems.map((item) => (
+              <div key={item.product_id} style={ui.row}>
+                <span>{item.name}</span>
+                <span style={{ color: "#ef4444", fontWeight: 700 }}>
+                  {item.stock} left
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </main>
     </div>
   );
 }
 
-// --- Professional Blue UI Theme ---
+/* ================= UI (MATCHED WITH CATEGORIES DESIGN) ================= */
+
 const ui: { [key: string]: React.CSSProperties } = {
   fullscreenWrapper: {
     display: "flex",
     width: "100vw",
     height: "100vh",
+    fontFamily: "'Inter', sans-serif",
     overflow: "hidden",
-    fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    backgroundColor: "#f0f7ff",
+    background: "#f0f7ff",
   },
+
+  /* SIDEBAR (same as categories) */
   sidebar: {
-    width: "260px",
+    width: "240px",
     background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)",
     color: "white",
-    padding: "32px 20px",
+    padding: "30px 20px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "space-between",
-    flexShrink: 0,
   },
+
   logo: {
-    fontSize: "24px",
+    fontSize: "22px",
     fontWeight: 800,
     marginBottom: "40px",
     textAlign: "center",
-    borderBottom: "1px solid rgba(255,255,255,0.1)",
-    paddingBottom: "20px"
   },
-  nav: { display: "flex", flexDirection: "column", gap: "6px" },
+
+  nav: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+
   navItem: {
-    padding: "12px 16px",
+    padding: "12px 15px",
     color: "#bfdbfe",
     textDecoration: "none",
     borderRadius: "10px",
     fontSize: "14px",
-    fontWeight: 500,
-    transition: "0.2s",
   },
+
   navActive: {
     background: "rgba(255,255,255,0.15)",
     color: "#fff",
+    fontWeight: 600,
   },
+
   logoutBtn: {
     padding: "12px",
-    background: "rgba(100, 76, 235, 1)",
+    background: "#644ceb",
     color: "white",
-    border: "1px solid rgba(239, 68, 68, 0.2)",
     borderRadius: "10px",
     cursor: "pointer",
     fontWeight: 600,
-    transition: "0.2s",
   },
+
+  /* MAIN */
   mainContent: {
     flex: 1,
-    padding: "40px 50px",
+    padding: "40px",
     overflowY: "auto",
   },
+
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "40px",
+    marginBottom: "30px",
   },
-  title: { fontSize: "32px", margin: 0, fontWeight: 800, color: "#1e3a8a" },
-  subtitle: { color: "#60a5fa", margin: "5px 0 0 0" },
+
+  title: {
+    fontSize: "28px",
+    color: "#1e3a8a",
+    margin: 0,
+    fontWeight: 800,
+  },
+
+  subtitle: {
+    color: "#60a5fa",
+    marginTop: "5px",
+  },
+
   dateDisplay: {
     background: "white",
-    padding: "10px 18px",
+    padding: "10px 16px",
     borderRadius: "12px",
-    fontSize: "14px",
-    color: "#1e40af",
     fontWeight: 600,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+    color: "#1e40af",
   },
+
+  /* CARDS */
   cardGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "24px",
-    marginBottom: "40px",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "20px",
+    marginBottom: "25px",
   },
+
   card: {
     background: "white",
-    padding: "24px",
-    borderRadius: "20px",
-    boxShadow: "0 10px 25px -5px rgba(30, 58, 138, 0.08)",
-    display: "flex",
-    alignItems: "center",
-    gap: "20px",
-    borderLeft: "5px solid #2563eb",
+    padding: "20px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 25px rgba(30,58,138,0.05)",
   },
-  cardIcon: {
-    width: "56px",
-    height: "56px",
-    background: "#eff6ff",
-    borderRadius: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "24px",
-    color: "#2563eb",
-  },
-  cardLabel: {
-    fontSize: "14px",
+
+  cardTitle: {
+    fontSize: "12px",
     color: "#64748b",
-    margin: 0,
     textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    fontWeight: 700
+    margin: 0,
   },
+
   cardValue: {
-    fontSize: "28px",
+    fontSize: "26px",
     fontWeight: 800,
-    margin: "4px 0 0 0",
-    color: "#1e293b"
+    marginTop: "10px",
+    color: "#1e293b",
   },
-  placeholderSection: {
+
+  /* TABLE STYLE (same as categories) */
+  tableContainer: {
     background: "white",
-    padding: "30px",
     borderRadius: "20px",
-    minHeight: "300px",
-    border: "1px solid #e0f2fe",
+    boxShadow: "0 10px 25px rgba(30, 58, 138, 0.05)",
+    padding: "20px",
+    marginTop: "20px",
   },
-  chartPlaceholder: {
-    height: "200px",
-    border: "2px dashed #dbeafe",
-    borderRadius: "15px",
+
+  sectionHeader: {
+    marginBottom: "15px",
+  },
+
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: 700,
+    color: "#1e3a8a",
+  },
+
+  row: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    padding: "12px",
+    borderBottom: "1px solid #f1f5f9",
+  },
+
+  emptyState: {
+    textAlign: "center",
+    padding: "30px",
     color: "#94a3b8",
-    fontSize: "14px"
-  }
+  },
 };

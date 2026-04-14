@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LessThanOrEqual } from 'typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './product.entity';
 import { Category } from '../categories/category.entity';
@@ -98,4 +99,13 @@ export class ProductsService {
     }
     return this.repo.remove(product);
   }
+
+  async getLowStock() {
+  return this.repo.find({
+    where: {
+      stock: LessThanOrEqual(5),
+    },
+    relations: ['category'],
+  });
+}
 }

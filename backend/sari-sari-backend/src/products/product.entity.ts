@@ -21,6 +21,10 @@ export class Product {
   @Column({ default: 0 })
   stock: number;
 
+  // ✅ ADD THIS (CRITICAL FOR DASHBOARD)
+  @Column({ default: 5 })
+  reorder_level: number;
+
   @Column()
   category_id: number;
 

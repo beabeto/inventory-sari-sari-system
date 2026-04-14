@@ -52,4 +52,10 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.service.remove(Number(id));
   }
+
+  // ✅ FIXED: Low stock endpoint
+  @Get('low-stock')
+  getLowStock() {
+    return this.service.getLowStock();
+  }
 }
