@@ -18,13 +18,15 @@ export class Product {
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   price: number;
 
-  @Column({ default: 0 })
+  // ✅ Stock (ONLY ONCE)
+  @Column({ type: 'int', default: 0 })
   stock: number;
 
-  // ✅ ADD THIS (CRITICAL FOR DASHBOARD)
-  @Column({ default: 5 })
+  // ✅ Reorder level (for alerts/dashboard)
+  @Column({ type: 'int', default: 5 })
   reorder_level: number;
 
+  // ✅ Foreign key
   @Column()
   category_id: number;
 

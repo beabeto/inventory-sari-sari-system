@@ -3,10 +3,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
-import Products from "./pages/Products"; // only if this file exists
-import Sales from "./pages/Sales";       // only if this file exists
-import Utang from "./pages/Utang";       // only if this file exists
-import Expenses from "./pages/Expenses"; // only if this file exists
+import Products from "./pages/Products"; 
+import Sales from "./pages/Sales";       
+import Utang from "./pages/Utang";      
+import Expenses from "./pages/Expenses"; 
 
 import ProtectedRoute from "./components/ProtectedRoute";
 function App() {

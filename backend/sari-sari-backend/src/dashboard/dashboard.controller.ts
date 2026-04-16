@@ -9,6 +9,4 @@ export class DashboardController {
   getDashboard() {
     return this.dashboardService.getDashboard();
   }
-
-  
 }

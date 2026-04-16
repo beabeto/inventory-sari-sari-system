@@ -1,53 +1,54 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
-import { SalesService } from './sales.service';
+import { Controller, Get, Post, Body, Query } from "@nestjs/common";
+import { SalesService } from "./sales.service";
 
-@Controller('sales')
+@Controller("sales")
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   /* ================= TODAY ================= */
-  @Get('today')
+  @Get("today")
   getTodaySales() {
     return this.salesService.getTodaySales();
   }
 
-  @Post('today')
-  createTodaySale(
-    @Body() body: { product_id: number; quantity: number },
-  ) {
-    return this.salesService.createTodaySale(
-      body.product_id,
-      body.quantity,
-    );
+  @Post("today")
+  createTodaySale(@Body() body: { product_id: number; quantity: number }) {
+    return this.salesService.createTodaySale(body.product_id, body.quantity);
   }
 
   /* ================= DAILY ================= */
-  @Get('history/daily')
-  getDaily(@Query('date') date: string) {
+  @Get("history/daily")
+  getDaily(@Query("date") date: string) {
     return this.salesService.getDailySales(date);
   }
 
-  /* ================= WEEKLY ================= */
-  @Get('history/weekly')
+  /* ================= WEEKLY (REAL GROUPED BY DATE) ================= */
+  @Get("history/weekly")
   getWeekly(
-    @Query('month') month: string,
-    @Query('year') year: string,
+    @Query("month") month: string,
+    @Query("year") year: string
   ) {
     return this.salesService.getWeeklySales(
       Number(month),
-      Number(year),
+      Number(year)
     );
   }
 
   /* ================= MONTHLY ================= */
-  @Get('history/monthly')
-  getMonthly(@Query('year') year: string) {
+  @Get("history/monthly")
+  getMonthly(@Query("year") year: string) {
     return this.salesService.getMonthlySales(Number(year));
   }
 
   /* ================= YEARLY ================= */
-  @Get('history/yearly')
+  @Get("history/yearly")
   getYearly() {
     return this.salesService.getYearlySales();
+  }
+
+  /* ================= ALL SALES (USED FOR FRONTEND HISTORY TABLES) ================= */
+  @Get("all")
+  getAllSales() {
+    return this.salesService.getAllSales();
   }
 }

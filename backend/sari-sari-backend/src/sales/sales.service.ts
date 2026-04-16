@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Sale } from './sale.entity';
@@ -18,27 +14,12 @@ export class SalesService {
     private productRepo: Repository<Product>,
   ) {}
 
-  /* ================= TODAY SALES ================= */
-  async getTodaySales() {
-    return this.salesRepo
-      .createQueryBuilder('sale')
-      .leftJoinAndSelect('sale.product', 'product')
-      .where('DATE(sale.sale_date) = CURDATE()')
-      .orderBy('sale.sale_date', 'DESC')
-      .getMany();
-  }
-
   /* ================= CREATE SALE ================= */
   async createTodaySale(product_id: number, quantity: number) {
-    const product = await this.productRepo.findOne({
-      where: { product_id },
-    });
+    const product = await this.productRepo.findOne({ where: { product_id } });
 
     if (!product) throw new NotFoundException('Product not found');
-
-    if (product.stock < quantity) {
-      throw new BadRequestException('Insufficient stock');
-    }
+    if (product.stock < quantity) throw new BadRequestException('Insufficient stock');
 
     const price = Number(product.price);
     const total = price * quantity;
@@ -57,50 +38,100 @@ export class SalesService {
     return this.salesRepo.save(sale);
   }
 
-  /* ================= DAILY SALES ================= */
+  /* ================= DAILY (REAL) ================= */
   async getDailySales(date: string) {
-    return this.salesRepo
+    const result = await this.salesRepo
       .createQueryBuilder('sale')
       .select('DATE(sale.sale_date)', 'date')
       .addSelect('SUM(sale.total)', 'totalSales')
       .where('DATE(sale.sale_date) = :date', { date })
       .groupBy('DATE(sale.sale_date)')
-      .getRawMany();
+      .getRawOne();
+
+    return {
+      date: result?.date ?? date,
+      totalSales: Number(result?.totalSales ?? 0),
+    };
   }
 
-  /* ================= WEEKLY SALES (REAL) ================= */
+  /* ================= WEEKLY (REAL PER DAY RANGE) ================= */
   async getWeeklySales(month: number, year: number) {
-    return this.salesRepo
+    const result = await this.salesRepo
       .createQueryBuilder('sale')
-      .select('WEEK(sale.sale_date, 1)', 'week')
+      .select('DATE(sale.sale_date)', 'date')
       .addSelect('SUM(sale.total)', 'totalSales')
       .where('MONTH(sale.sale_date) = :month', { month })
       .andWhere('YEAR(sale.sale_date) = :year', { year })
-      .groupBy('WEEK(sale.sale_date, 1)')
-      .orderBy('week', 'ASC')
+      .groupBy('DATE(sale.sale_date)')
+      .orderBy('date', 'ASC')
       .getRawMany();
+
+    return result.map(r => ({
+      date: r.date,
+      totalSales: Number(r.totalSales),
+    }));
   }
 
-  /* ================= MONTHLY SALES ================= */
+  /* ================= MONTHLY (REAL PER DAY) ================= */
   async getMonthlySales(year: number) {
-    return this.salesRepo
+    const result = await this.salesRepo
+      .createQueryBuilder('sale')
+      .select('DATE(sale.sale_date)', 'date')
+      .addSelect('SUM(sale.total)', 'totalSales')
+      .where('YEAR(sale.sale_date) = :year', { year })
+      .groupBy('DATE(sale.sale_date)')
+      .orderBy('date', 'ASC')
+      .getRawMany();
+
+    return result.map(r => ({
+      date: r.date,
+      totalSales: Number(r.totalSales),
+    }));
+  }
+
+  /* ================= YEARLY (REAL PER MONTH) ================= */
+  async getYearlySales() {
+    const result = await this.salesRepo
       .createQueryBuilder('sale')
       .select('MONTH(sale.sale_date)', 'month')
       .addSelect('SUM(sale.total)', 'totalSales')
-      .where('YEAR(sale.sale_date) = :year', { year })
-      .groupBy('MONTH(sale.sale_date)')
+      .groupBy('month')
       .orderBy('month', 'ASC')
       .getRawMany();
+
+    return Array.from({ length: 12 }, (_, i) => {
+      const found = result.find(r => Number(r.month) === i + 1);
+      return {
+        month: i + 1,
+        totalSales: Number(found?.totalSales ?? 0),
+      };
+    });
   }
 
-  /* ================= YEARLY SALES ================= */
-  async getYearlySales() {
+  /* ================= TODAY ================= */
+  async getTodaySales() {
     return this.salesRepo
       .createQueryBuilder('sale')
-      .select('YEAR(sale.sale_date)', 'year')
-      .addSelect('SUM(sale.total)', 'totalSales')
-      .groupBy('YEAR(sale.sale_date)')
-      .orderBy('year', 'ASC')
-      .getRawMany();
+      .leftJoinAndSelect('sale.product', 'product')
+      .where('DATE(sale.sale_date) = CURDATE()')
+      .orderBy('sale.sale_date', 'DESC')
+      .getMany();
   }
+
+  async getAllSales() {
+  const result = await this.salesRepo
+    .createQueryBuilder("sale")
+    .leftJoinAndSelect("sale.product", "product")
+    .orderBy("sale.sale_date", "DESC")
+    .getMany();
+
+  return result.map(s => ({
+    sale_id: s.sale_id,
+    product_name: s.product?.name,
+    quantity: Number(s.quantity),
+    price: Number(s.price),
+    total: Number(s.total),
+    sale_date: s.sale_date,
+  }));
+}
 }

@@ -6,12 +6,10 @@ import { AuthService } from './auth/auth.service';
 import { AuthController } from './auth/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { DashboardModule } from './dashboard/dashboard.module';
-// future imports
-// import { CategoriesModule } from './categories/categories.module';
-// import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { SalesModule } from './sales/sales.module';
+import { UtangModule } from './utang/utang.module';
 
 @Module({
   imports: [
@@ -37,6 +35,7 @@ import { SalesModule } from './sales/sales.module';
     CategoriesModule,
     ProductsModule,
     SalesModule,
+    UtangModule,
   ],
   controllers: [AuthController],
   providers: [UsersService, AuthService],
