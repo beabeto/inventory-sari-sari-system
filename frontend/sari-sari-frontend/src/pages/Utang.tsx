@@ -151,7 +151,7 @@ export default function UtangPage() {
       {/* SIDEBAR */}
       <aside style={ui.sidebar}>
         <div>
-          <div style={ui.logo}>🏪 Sari-sari Store</div>
+          <div style={ui.logo}> Sari-sari Store</div>
 
           <nav style={ui.nav}>
             <a href="/dashboard" style={ui.navItem}>Dashboard</a>
@@ -324,11 +324,33 @@ const ui: { [key: string]: React.CSSProperties } = {
     flexDirection: "column",
     justifyContent: "space-between",
   },
-  logo: { fontSize: "22px", fontWeight: 800, marginBottom: "40px", textAlign: "center" },
+  logo: {
+    fontSize: "22px",
+    fontWeight: 800,
+    textAlign: "center",
+    marginBottom: "40px",
+  },
   nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navItem: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px", fontSize: "14px" },
-  navActive: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { padding: "12px", background: "#644ceb", color: "white", borderRadius: "10px", cursor: "pointer", fontWeight: 600 },
+
+  navItem: {
+    padding: "12px 15px",
+    color: "#bfdbfe",
+    textDecoration: "none",
+    borderRadius: "10px",
+  },
+
+  navActive: {
+    background: "rgba(255,255,255,0.15)",
+    color: "#fff",
+    fontWeight: 600,
+  },
+  logoutBtn: {
+    padding: "12px",
+    background: "#644ceb",
+    color: "white",
+    borderRadius: "10px",
+    border: "none",
+  },
   mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" },
   title: { fontSize: "28px", color: "#1e3a8a", margin: 0, fontWeight: 800 },

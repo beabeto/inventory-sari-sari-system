@@ -392,6 +392,7 @@ const ui: { [key: string]: React.CSSProperties } = {
     width: "100vw",
     height: "100vh",
     fontFamily: "'Inter', sans-serif",
+    overflow: "hidden",
     background: "#f0f7ff",
   },
   sidebar: {
@@ -403,19 +404,21 @@ const ui: { [key: string]: React.CSSProperties } = {
     flexDirection: "column",
     justifyContent: "space-between",
   },
-  logo: {
+ logo: {
     fontSize: "22px",
     fontWeight: 800,
-    marginBottom: "40px",
     textAlign: "center",
+    marginBottom: "40px",
   },
   nav: { display: "flex", flexDirection: "column", gap: "8px" },
+
   navItem: {
     padding: "12px 15px",
     color: "#bfdbfe",
     textDecoration: "none",
     borderRadius: "10px",
   },
+
   navActive: {
     background: "rgba(255,255,255,0.15)",
     color: "#fff",
@@ -426,7 +429,6 @@ const ui: { [key: string]: React.CSSProperties } = {
     background: "#644ceb",
     color: "white",
     borderRadius: "10px",
-    cursor: "pointer",
     border: "none",
   },
   mainContent: { flex: 1, padding: "40px", overflowY: "auto" },

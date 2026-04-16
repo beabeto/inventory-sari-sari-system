@@ -272,6 +272,9 @@ const ui: { [key: string]: React.CSSProperties } = {
     borderRadius: "12px",
     fontWeight: 600,
     color: "#1e40af",
+    alignItems: "center",
+    display: "flex",
+    gap: "8x",
   },
 
   cardGrid: {

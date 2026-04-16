@@ -187,13 +187,48 @@ export default function Categories() {
 
 // --- Combined UI ---
 const ui: { [key: string]: React.CSSProperties } = {
-  fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
-  sidebar: { width: "240px", background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
-  logo: { fontSize: "22px", fontWeight: 800, marginBottom: "40px", textAlign: "center" },
+  fullscreenWrapper: { display: "flex",
+    width: "100vw",
+    height: "100vh",
+    fontFamily: "'Inter', sans-serif",
+    overflow: "hidden",
+    background: "#f0f7ff", },
+  sidebar: {
+    width: "240px",
+    background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)",
+    color: "white",
+    padding: "30px 20px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  logo: {
+    fontSize: "22px",
+    fontWeight: 800,
+    textAlign: "center",
+    marginBottom: "40px",
+  },
   nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navItem: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px", fontSize: "14px" },
-  navActive: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { padding: "12px", background: "#644ceb", color: "white", borderRadius: "10px", cursor: "pointer", fontWeight: 600 },
+
+  navItem: {
+    padding: "12px 15px",
+    color: "#bfdbfe",
+    textDecoration: "none",
+    borderRadius: "10px",
+  },
+
+  navActive: {
+    background: "rgba(255,255,255,0.15)",
+    color: "#fff",
+    fontWeight: 600,
+  },
+  logoutBtn: {
+    padding: "12px",
+    background: "#644ceb",
+    color: "white",
+    borderRadius: "10px",
+    border: "none",
+  },
   mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" },
   title: { fontSize: "28px", color: "#1e3a8a", margin: 0, fontWeight: 800 },

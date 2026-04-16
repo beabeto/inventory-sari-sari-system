@@ -337,14 +337,48 @@ export default function Sales() {
 
 /* ===================== STYLE (UNCHANGED) ===================== */
 const ui: { [key: string]: React.CSSProperties } = {
-  fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", background: "#f0f7ff" },
-  sidebar: { width: "240px", background: "#1e3a8a", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
-  logo: { fontSize: "22px", fontWeight: 800, textAlign: "center", marginBottom: "40px" },
+  fullscreenWrapper: { display: "flex",
+    width: "100vw",
+    height: "100vh",
+    fontFamily: "'Inter', sans-serif",
+    overflow: "hidden",
+    background: "#f0f7ff", },
+  sidebar: {
+    width: "240px",
+    background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)",
+    color: "white",
+    padding: "30px 20px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  logo: {
+    fontSize: "22px",
+    fontWeight: 800,
+    textAlign: "center",
+    marginBottom: "40px",
+  },
   nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navItem: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px" },
-  navActive: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { padding: "12px", background: "#644ceb", color: "white", border: "none", borderRadius: "10px" },
 
+  navItem: {
+    padding: "12px 15px",
+    color: "#bfdbfe",
+    textDecoration: "none",
+    borderRadius: "10px",
+  },
+
+  navActive: {
+    background: "rgba(255,255,255,0.15)",
+    color: "#fff",
+    fontWeight: 600,
+  },
+  logoutBtn: {
+    padding: "12px",
+    background: "#644ceb",
+    color: "white",
+    borderRadius: "10px",
+    border: "none",
+  },
   mainContent: { flex: 1, padding: "40px" },
   header: { display: "flex", justifyContent: "space-between", marginBottom: "20px" },
   title: { fontSize: "28px", color: "#1e3a8a", fontWeight: 800 },
