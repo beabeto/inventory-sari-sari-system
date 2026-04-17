@@ -1,54 +1,67 @@
-import { Controller, Get, Post, Body, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, Query, BadRequestException } from "@nestjs/common";
 import { SalesService } from "./sales.service";
 
 @Controller("sales")
 export class SalesController {
-  constructor(private readonly salesService: SalesService) {}
+  constructor(private readonly service: SalesService) {}
 
-  /* ================= TODAY ================= */
   @Get("today")
-  getTodaySales() {
-    return this.salesService.getTodaySales();
+  getToday() {
+    return this.service.getToday();
   }
 
   @Post("today")
-  createTodaySale(@Body() body: { product_id: number; quantity: number }) {
-    return this.salesService.createTodaySale(body.product_id, body.quantity);
+  create(@Body() body: { product_id: number; quantity: number }) {
+    return this.service.create(body);
   }
 
-  /* ================= DAILY ================= */
   @Get("history/daily")
-  getDaily(@Query("date") date: string) {
-    return this.salesService.getDailySales(date);
+  daily(@Query("date") date: string) {
+    if (!date) throw new BadRequestException("date is required");
+    return this.service.daily(date);
   }
 
-  /* ================= WEEKLY (REAL GROUPED BY DATE) ================= */
   @Get("history/weekly")
-  getWeekly(
-    @Query("month") month: string,
-    @Query("year") year: string
-  ) {
-    return this.salesService.getWeeklySales(
-      Number(month),
-      Number(year)
-    );
+  weekly() {
+    return this.service.weekly();
   }
 
-  /* ================= MONTHLY ================= */
+  @Get("history/last-week")
+  lastWeek() {
+    return this.service.lastWeek();
+  }
+
   @Get("history/monthly")
-  getMonthly(@Query("year") year: string) {
-    return this.salesService.getMonthlySales(Number(year));
+monthly(@Query("year") year?: string) {
+  const parsedYear = Number(year);
+
+  if (!year || isNaN(parsedYear)) {
+    return this.service.monthly(new Date().getFullYear());
   }
 
-  /* ================= YEARLY ================= */
+  return this.service.monthly(parsedYear);
+}
+
   @Get("history/yearly")
-  getYearly() {
-    return this.salesService.getYearlySales();
+  yearly() {
+    return this.service.yearly();
   }
 
-  /* ================= ALL SALES (USED FOR FRONTEND HISTORY TABLES) ================= */
-  @Get("all")
-  getAllSales() {
-    return this.salesService.getAllSales();
+  @Get("best-selling")
+  bestSelling() {
+    return this.service.bestSelling();
+  }
+
+  @Get("profit-per-product")
+  profitPerProduct() {
+    return this.service.profitPerProduct();
+  }
+
+  @Get("profit-range")
+  profitRange(@Query("start") start: string, @Query("end") end: string) {
+    if (!start || !end) {
+      throw new BadRequestException("start and end date required");
+    }
+    return this.service.profitDaily(start, end);
   }
 }

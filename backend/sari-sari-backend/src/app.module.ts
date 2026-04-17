@@ -10,6 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { SalesModule } from './sales/sales.module';
 import { UtangModule } from './utang/utang.module';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { UtangModule } from './utang/utang.module';
     ProductsModule,
     SalesModule,
     UtangModule,
+    ExpensesModule,
   ],
   controllers: [AuthController],
   providers: [UsersService, AuthService],
