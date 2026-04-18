@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, Query } from "@nestjs/common";
+import { Controller, Get, Post, Delete, Body, Param, Query, ParseIntPipe } from "@nestjs/common";
 import { ExpensesService } from "./expenses.service";
 
 @Controller("expenses")
@@ -16,7 +16,7 @@ export class ExpensesController {
   }
 
   @Delete(":id")
-  delete(@Param("id") id: number) {
+  delete(@Param("id", ParseIntPipe) id: number) {
     return this.service.deleteExpense(id);
   }
 }

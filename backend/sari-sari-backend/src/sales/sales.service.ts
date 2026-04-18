@@ -10,10 +10,26 @@ export class SalesService {
     private saleRepo: Repository<Sale>
   ) {}
 
-  /* ================= TODAY ================= */
+  /* ================= TODAY TOTAL ================= */
   async getToday() {
     return this.saleRepo.query(`
-      SELECT * FROM sales
+      SELECT IFNULL(SUM(total), 0) as total
+      FROM sales
+      WHERE DATE(sale_date) = CURDATE()
+    `);
+  }
+
+  /* ================= RECENT SALES (FIXED FOR FRONTEND) ================= */
+  async recentToday() {
+    return this.saleRepo.query(`
+      SELECT 
+        sale_id,
+        product_id,
+        quantity,
+        price,
+        total,
+        sale_date
+      FROM sales
       WHERE DATE(sale_date) = CURDATE()
       ORDER BY sale_date DESC
     `);
@@ -35,9 +51,9 @@ export class SalesService {
     }
 
     await this.saleRepo.query(
-      `INSERT INTO sales (product_id, quantity, price, sale_date)
-       VALUES (?, ?, ?, NOW())`,
-      [data.product_id, data.quantity, price]
+      `INSERT INTO sales (product_id, quantity, price, total, sale_date)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [data.product_id, data.quantity, price, price * data.quantity]
     );
 
     await this.saleRepo.query(
@@ -59,11 +75,11 @@ export class SalesService {
     return this.saleRepo.query(
       `
       SELECT 
-        DATE(CONVERT_TZ(sale_date, '+00:00', '+08:00')) as date,
-        SUM(quantity * price) as totalSales
+        DATE(sale_date) as date,
+        IFNULL(SUM(total), 0) as totalSales
       FROM sales
-      WHERE DATE(CONVERT_TZ(sale_date, '+00:00', '+08:00')) = ?
-      GROUP BY DATE(CONVERT_TZ(sale_date, '+00:00', '+08:00'))
+      WHERE DATE(sale_date) = ?
+      GROUP BY DATE(sale_date)
       `,
       [safeDate]
     );
@@ -74,7 +90,7 @@ export class SalesService {
     const raw = await this.saleRepo.query(`
       SELECT 
         DAYOFWEEK(sale_date) as dayIndex,
-        SUM(quantity * price) as totalSales
+        IFNULL(SUM(total), 0) as totalSales
       FROM sales
       WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1)
       GROUP BY DAYOFWEEK(sale_date)
@@ -84,7 +100,6 @@ export class SalesService {
 
     raw.forEach((d: any) => {
       const index = d.dayIndex === 1 ? 6 : d.dayIndex - 2;
-
       if (index >= 0 && index < 7) {
         week[index] = Number(d.totalSales || 0);
       }
@@ -101,23 +116,8 @@ export class SalesService {
     ];
   }
 
-  async lastWeek() {
-  return this.saleRepo.query(`
-    SELECT 
-      DATE(sale_date) as date,
-      SUM(quantity * price) as totalSales
-    FROM sales
-    WHERE sale_date BETWEEN 
-      DATE_SUB(CURDATE(), INTERVAL 14 DAY)
-      AND DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-    GROUP BY DATE(sale_date)
-    ORDER BY date ASC
-  `);
-}
-
-  /* ================= MONTHLY (FIXED NA N SAFETY) ================= */
+  /* ================= MONTHLY ================= */
   async monthly(year?: number) {
-    // ✅ CRITICAL FIX (prevents NaN crash)
     const safeYear =
       typeof year === "number" && !isNaN(year)
         ? year
@@ -127,7 +127,7 @@ export class SalesService {
       `
       SELECT 
         MONTH(sale_date) as month,
-        SUM(quantity * price) as totalSales
+        IFNULL(SUM(total), 0) as totalSales
       FROM sales
       WHERE YEAR(sale_date) = ?
       GROUP BY MONTH(sale_date)
@@ -156,60 +156,10 @@ export class SalesService {
     return this.saleRepo.query(`
       SELECT 
         YEAR(sale_date) as year,
-        SUM(quantity * price) as totalSales
+        IFNULL(SUM(total), 0) as totalSales
       FROM sales
       GROUP BY YEAR(sale_date)
       ORDER BY year ASC
     `);
-  }
-
-  /* ================= BEST SELLING ================= */
-  async bestSelling() {
-    return this.saleRepo.query(`
-      SELECT 
-        p.name,
-        SUM(s.quantity) as totalSold
-      FROM sales s
-      JOIN products p ON p.product_id = s.product_id
-      GROUP BY s.product_id
-      ORDER BY totalSold DESC
-      LIMIT 5
-    `);
-  }
-
-  /* ================= PROFIT PER PRODUCT ================= */
-  async profitPerProduct() {
-    return this.saleRepo.query(`
-      SELECT 
-        p.name,
-        SUM(s.quantity * (s.price - p.price)) as profit
-      FROM sales s
-      JOIN products p ON p.product_id = s.product_id
-      GROUP BY s.product_id
-    `);
-  }
-
-  /* ================= PROFIT DAILY ================= */
-  async profitDaily(start: string, end: string) {
-    const safeStart =
-      start || new Date().toISOString().split("T")[0];
-
-    const safeEnd =
-      end || new Date().toISOString().split("T")[0];
-
-    return this.saleRepo.query(
-      `
-      SELECT 
-        DATE(CONVERT_TZ(s.sale_date, '+00:00', '+08:00')) as date,
-        SUM((s.price - p.price) * s.quantity) as profit
-      FROM sales s
-      JOIN products p ON p.product_id = s.product_id
-      WHERE DATE(CONVERT_TZ(s.sale_date, '+00:00', '+08:00'))
-        BETWEEN ? AND ?
-      GROUP BY DATE(CONVERT_TZ(s.sale_date, '+00:00', '+08:00'))
-      ORDER BY date ASC
-      `,
-      [safeStart, safeEnd]
-    );
   }
 }

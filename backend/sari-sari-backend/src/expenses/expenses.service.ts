@@ -13,11 +13,13 @@ export class ExpensesService {
   async getExpenses(date?: string) {
     const query = this.repo.createQueryBuilder("e");
 
+    // ✅ filter by date (FIXED)
     if (date) {
-      query.where("DATE(e.created_at) = :date", { date });
+      query.where("e.date = :date", { date });
     }
 
-    return query.orderBy("e.created_at", "DESC").getMany();
+    // ✅ order by date (FIXED)
+    return query.orderBy("e.date", "DESC").getMany();
   }
 
   async createExpense(data: Partial<Expense>) {

@@ -5,10 +5,9 @@ import { logout } from "../api/auth";
 /* ================= INTERFACE ================= */
 interface Expense {
   expense_id: number;
-  category: string;
-  description: string;
+  name: string;
   amount: number;
-  created_at: string;
+  date: string;
 }
 
 export default function Expenses() {
@@ -62,10 +61,11 @@ export default function Expenses() {
   const addExpense = async () => {
     if (!category || amount <= 0) return;
 
+    // ✅ FIX: send correct fields to backend
     await axios.post(`${API_URL}/expenses`, {
-      category,
-      description,
+      name: `${category} - ${description || ""}`,
       amount,
+      date: selectedDate || new Date().toISOString().split("T")[0],
     });
 
     setCategory("");
@@ -205,26 +205,30 @@ export default function Expenses() {
             </thead>
 
             <tbody>
-              {expenses.map((e) => (
-                <tr key={e.expense_id}>
-                  <td style={ui.td}>
-                    {new Date(e.created_at).toLocaleDateString()}
-                  </td>
-                  <td style={ui.td}>{e.category}</td>
-                  <td style={ui.td}>{e.description}</td>
-                  <td style={{ ...ui.td, color: "#ef4444" }}>
-                    ₱{Number(e.amount).toLocaleString()}
-                  </td>
-                  <td style={ui.td}>
-                    <button
-                      style={ui.btnDelete}
-                      onClick={() => deleteExpense(e.expense_id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {expenses.map((e) => {
+                const [cat, desc] = e.name.split(" - ");
+
+                return (
+                  <tr key={e.expense_id}>
+                    <td style={ui.td}>
+                      {new Date(e.date).toLocaleDateString()}
+                    </td>
+                    <td style={ui.td}>{cat}</td>
+                    <td style={ui.td}>{desc || "-"}</td>
+                    <td style={{ ...ui.td, color: "#ef4444" }}>
+                      ₱{Number(e.amount).toLocaleString()}
+                    </td>
+                    <td style={ui.td}>
+                      <button
+                        style={ui.btnDelete}
+                        onClick={() => deleteExpense(e.expense_id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -237,7 +241,7 @@ export default function Expenses() {
   );
 }
 
-/* ================= UI (SAME DESIGN) ================= */
+/* ================= UI (UNCHANGED) ================= */
 const ui: { [key: string]: React.CSSProperties } = {
   fullscreenWrapper: {
     display: "flex",

@@ -3,13 +3,14 @@ import axios from "axios";
 import { logout } from "../api/auth";
 
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 
 /* ================= INTERFACES ================= */
@@ -31,7 +32,7 @@ interface Product {
 
 interface Sale {
   sale_id: number;
-  sale_date: string;
+  sale_date?: string;
   quantity?: number;
   price?: number;
   total?: number;
@@ -48,6 +49,8 @@ export default function Dashboard() {
     lowStock: 0,
     salesToday: 0,
     totalUtang: 0,
+    expensesToday: 0,
+    profitToday: 0,
   });
 
   const [lowStockItems, setLowStockItems] = useState<Product[]>([]);
@@ -56,28 +59,30 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [chartMode, setChartMode] = useState<ChartMode>("today");
 
-  /* ================= SAFE NUMBER ================= */
-  const num = (v: any) => {
-    const n = Number(v);
-    return isNaN(n) ? 0 : n;
-  };
+  const num = (v: any) => (isNaN(Number(v)) ? 0 : Number(v));
 
   /* ================= FETCH ================= */
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [dashRes, stockRes, salesRes, weeklyRes, monthlyRes] =
+        const [dashRes, stockRes, recentRes, weeklyRes, monthlyRes] =
           await Promise.all([
             axios.get(`${API_URL}/dashboard`),
             axios.get(`${API_URL}/products/low-stock`),
-            axios.get(`${API_URL}/sales/today`),
-            axios.get(`${API_URL}/sales/history/weekly`),
-            axios.get(`${API_URL}/sales/history/monthly`),
+            axios.get(`${API_URL}/dashboard/recent-today`),
+            axios.get(`${API_URL}/dashboard/weekly`),
+            axios.get(`${API_URL}/dashboard/monthly`),
           ]);
 
-        setData(dashRes.data || {});
+        setData({
+          ...dashRes.data,
+          salesToday: num(dashRes.data.salesToday),
+          expensesToday: num(dashRes.data.expensesToday),
+          profitToday: num(dashRes.data.profitToday),
+        });
+
         setLowStockItems(stockRes.data || []);
-        setRecentSales(salesRes.data || []);
+        setRecentSales(Array.isArray(recentRes.data) ? recentRes.data : []);
         setWeeklyData(weeklyRes.data || []);
         setMonthlyData(monthlyRes.data || []);
       } catch (err) {
@@ -90,61 +95,41 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  /* ================= FORMAT ================= */
   const formatDate = (date: any) => {
+    if (!date) return "-";
     const d = new Date(date);
-    return isNaN(d.getTime()) ? "Invalid Date" : d.toLocaleString();
+    return isNaN(d.getTime()) ? "-" : d.toLocaleString();
   };
 
-  /* ================= SAFE TOTAL ================= */
   const getSaleTotal = (s: Sale) => {
-    const qty = num(s.quantity);
-    const price = num(s.price);
-    const direct = num(s.total);
-
-    return direct > 0 ? direct : qty * price;
+    return num(s.total) || num(s.quantity) * num(s.price);
   };
 
-  /* ================= WEEK NORMALIZER ================= */
-  const normalizeWeek = (data: any[]) => {
-    const days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-    const map = Array(7).fill(0);
-
-    data.forEach((d) => {
-      let index = -1;
-
-      if (typeof d.dayIndex === "number") {
-        index = d.dayIndex === 0 ? 6 : d.dayIndex - 1;
-      } else if (d.day) {
-        index = days.indexOf(String(d.day).slice(0, 3).toUpperCase());
-      }
-
-      if (index >= 0) {
-        map[index] = num(d.totalSales);
-      }
-    });
-
-    return days.map((day, i) => ({
-      name: day,
-      value: map[i],
-    }));
-  };
-
-  /* ================= CHART DATA ================= */
+  /* ================= CHART DATA FIX ================= */
   const chartData = () => {
     const sales = num(data.salesToday);
-    const expenses = num(data.expensesToday ?? sales * 0.3);
-    const profit = num(data.profitToday ?? sales - expenses);
+    const expenses = num(data.expensesToday);
+    const profit = num(data.profitToday);
 
     if (chartMode === "today") {
       return [
-        { name: "Sales", value: sales },
-        { name: "Expenses", value: expenses },
-        { name: "Profit", value: profit },
+        {
+          name: "Today",
+          sales,
+          expenses,
+          profit,
+        },
       ];
     }
 
     if (chartMode === "weekly") {
-      return weeklyData?.length ? normalizeWeek(weeklyData) : [];
+      return weeklyData.map((d: any) => ({
+        name: d.day,
+        sales: num(d.totalSales),
+        expenses: 0,
+        profit: num(d.totalSales),
+      }));
     }
 
     if (chartMode === "monthly") {
@@ -153,9 +138,11 @@ export default function Dashboard() {
         "Jul","Aug","Sep","Oct","Nov","Dec"
       ];
 
-      return (monthlyData || []).map((d: any) => ({
+      return monthlyData.map((d: any) => ({
         name: months[(num(d.month) || 1) - 1],
-        value: num(d.totalSales),
+        sales: num(d.totalSales),
+        expenses: 0,
+        profit: num(d.totalSales),
       }));
     }
 
@@ -218,20 +205,21 @@ export default function Dashboard() {
 
           <div style={{ ...ui.card, borderLeft: "5px solid #16a34a" }}>
             <h3 style={ui.cardTitle}>Sales Today</h3>
-            <p style={ui.cardValue}>
-              ₱{num(data.salesToday).toLocaleString()}
-            </p>
+            <p style={ui.cardValue}>₱{num(data.salesToday).toLocaleString()}</p>
           </div>
 
           <div style={{ ...ui.card, borderLeft: "5px solid #f59e0b" }}>
-            <h3 style={ui.cardTitle}>Total Utang</h3>
-            <p style={ui.cardValue}>
-              ₱{num(data.totalUtang).toLocaleString()}
-            </p>
+            <h3 style={ui.cardTitle}>Expenses Today</h3>
+            <p style={ui.cardValue}>₱{num(data.expensesToday).toLocaleString()}</p>
+          </div>
+
+          <div style={{ ...ui.card, borderLeft: "5px solid #10b981" }}>
+            <h3 style={ui.cardTitle}>Profit</h3>
+            <p style={ui.cardValue}>₱{num(data.profitToday).toLocaleString()}</p>
           </div>
         </div>
 
-        {/* CHART */}
+        {/* CHART (LINE - COLORFUL) */}
         <div style={ui.tableContainer}>
           <div style={ui.chartHeader}>
             <h3 style={ui.sectionTitle}>Sales Analytics</h3>
@@ -253,15 +241,36 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div style={{ width: "100%", height: 300 }}>
+          <div style={{ width: "100%", height: 320 }}>
             <ResponsiveContainer>
-              <BarChart data={chartData()}>
+              <LineChart data={chartData()}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" />
-              </BarChart>
+                <Legend />
+
+                <Line
+                  type="monotone"
+                  dataKey="sales"
+                  stroke="#22c55e"
+                  strokeWidth={3}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -308,7 +317,7 @@ export default function Dashboard() {
   );
 }
 
-/* ================= UI (UNCHANGED) ================= */
+/* ================= UI ================= */
 const ui: any = {
   fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
   sidebar: { width: "240px", background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
@@ -322,7 +331,7 @@ const ui: any = {
   title: { fontSize: "28px", color: "#1e3a8a", fontWeight: 800 },
   subtitle: { color: "#60a5fa" },
   dateDisplay: { background: "white", padding: "10px 16px", borderRadius: "12px", fontWeight: 600, color: "#1e40af" },
-  cardGrid: { display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "20px" },
+  cardGrid: { display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "20px" },
   card: { background: "white", padding: "20px", borderRadius: "16px", boxShadow: "0 10px 25px rgba(30,58,138,0.05)" },
   cardTitle: { fontSize: "12px", color: "#64748b", textTransform: "uppercase" },
   cardValue: { fontSize: "26px", fontWeight: 800, marginTop: "10px", color: "blue" },

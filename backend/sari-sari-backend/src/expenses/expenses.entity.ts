@@ -1,9 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('expenses') // ✅ FORCE correct table
 export class Expense {
   @PrimaryGeneratedColumn()
-  expense_id: number; // ONLY ONE AUTO ID
+  expense_id: number;
 
   @Column()
   name: string;

@@ -18,19 +18,13 @@ interface Product {
   stock: number;
 }
 
-interface Sale {
-  product_id: number;
-  quantity: number;
-  price: number;
-}
-
 const API_URL = "http://localhost:3000";
 
 const WEEK_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 export default function Sales() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
+  const [salesTotal, setSalesTotal] = useState(0); // ✅ FIXED
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [mode, setMode] =
     useState<"daily" | "weekly" | "monthly" | "yearly">("daily");
@@ -68,9 +62,18 @@ export default function Sales() {
   };
 
   const fetchSales = async () => {
+  try {
     const res = await axios.get(`${API_URL}/sales/today`);
-    setSales(res.data || []);
-  };
+
+    // ✅ SAFE PARSE (handles empty, null, undefined)
+    const total = Number(res.data?.[0]?.total ?? 0);
+
+    setSalesTotal(total);
+  } catch (err) {
+    console.error("Failed to fetch sales:", err);
+    setSalesTotal(0);
+  }
+};
 
   const fetchHistory = async () => {
     const now = new Date();
@@ -143,7 +146,7 @@ export default function Sales() {
     }));
   };
 
-  /* ================= CHART DATA (FIXED) ================= */
+  /* ================= CHART DATA ================= */
   const chartData = () => {
     const months = [
       "Jan","Feb","Mar","Apr","May","Jun",
@@ -183,7 +186,7 @@ export default function Sales() {
     }));
   };
 
-  const totalSales = sales.reduce((s, x) => s + x.quantity * x.price, 0);
+  const totalSales = salesTotal; // ✅ FIXED
   const profit = totalSales * 0.3;
   const lowStock = products.filter((p) => p.stock <= 5);
 
@@ -194,7 +197,6 @@ export default function Sales() {
 
   return (
     <div style={ui.wrapper}>
-      {/* SIDEBAR (UNCHANGED) */}
       <aside style={ui.sidebar}>
         <h2 style={ui.logo}>Sari-Sari Store</h2>
 
@@ -210,7 +212,6 @@ export default function Sales() {
         <button style={ui.logoutBtn} onClick={handleLogout}>Logout</button>
       </aside>
 
-      {/* MAIN (UNCHANGED UI) */}
       <main style={ui.main}>
         <h1 style={ui.title}>Sales Dashboard</h1>
         <p style={ui.time}>🇵🇭 {phTime}</p>
@@ -246,7 +247,6 @@ export default function Sales() {
           </ResponsiveContainer>
         </div>
 
-        {/* MODAL (UNCHANGED) */}
         {showModal && (
           <div style={ui.modalBg}>
             <div style={ui.modal}>
@@ -282,6 +282,7 @@ export default function Sales() {
     </div>
   );
 }
+
 
 /* ================= UI (UNCHANGED) ================= */
 const ui: any = {
