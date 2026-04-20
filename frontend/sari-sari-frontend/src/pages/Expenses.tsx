@@ -106,6 +106,7 @@ export default function Expenses() {
             <a href="/expenses" style={{ ...ui.navItem, ...ui.navActive }}>
               Expenses
             </a>
+            <a href="/account" style={ui.navItem}>Account Settings</a>
           </nav>
         </div>
 

@@ -48,3 +48,11 @@ export function getToken(): string | null {
 export function isAuthenticated(): boolean {
   return !!getToken();
 }
+
+export function authHeader() {
+  const token = getToken();
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+}

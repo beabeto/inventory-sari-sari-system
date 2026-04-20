@@ -1,30 +1,76 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private repo: Repository<User>,
   ) {}
 
-  /** Find a user by username */
-  async findOne(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { username } });
+  findById(id: number) {
+    return this.repo.findOne({ where: { id } });
   }
 
-  /** Create a new user with hashed password */
-  async create(username: string, password: string): Promise<User> {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.usersRepository.create({ username, password: hashedPassword });
-    return this.usersRepository.save(user);
+  async findOne(username: string) {
+  return this.repo.findOne({
+    where: { username },
+  });
+}
+
+  /* ================= PROFILE ================= */
+  async getMe(userId: number) {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    return {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    };
   }
 
-  /** Optional: Safe method to get all users for testing */
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async updateProfile(userId: number, username: string) {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    user.username = username;
+    await this.repo.save(user);
+
+    return { message: 'Profile updated successfully' };
+  }
+
+  /* ================= PASSWORD ================= */
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) throw new UnauthorizedException('Wrong current password');
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await this.repo.save(user);
+
+    return { message: 'Password changed successfully' };
+  }
+
+  /* OPTIONAL CREATE (fixes your seed issue) */
+  async create(username: string, password: string) {
+    const hashed = await bcrypt.hash(password, 10);
+
+    const user = this.repo.create({
+      username,
+      password: hashed,
+      role: 'admin',
+    });
+
+    return this.repo.save(user);
   }
 }

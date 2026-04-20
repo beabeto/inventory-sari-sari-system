@@ -165,6 +165,7 @@ export default function Dashboard() {
             <a href="/sales" style={ui.navItem}>Sales</a>
             <a href="/utang" style={ui.navItem}>Utang</a>
             <a href="/expenses" style={ui.navItem}>Expenses</a>
+            <a href="/account" style={ui.navItem}>Account Settings</a>
           </nav>
         </div>
 

@@ -207,6 +207,7 @@ export default function Sales() {
           <a href="/sales" style={{ ...ui.link, ...ui.active }}>Sales</a>
           <a href="/utang" style={ui.link}>Utang</a>
           <a href="/expenses" style={ui.link}>Expenses</a>
+          <a href="/account" style={ui.navItem}>Account Settings</a>
         </nav>
 
         <button style={ui.logoutBtn} onClick={handleLogout}>Logout</button>

@@ -160,6 +160,7 @@ export default function UtangPage() {
             <a href="/sales" style={ui.navItem}>Sales</a>
             <a href="/utang" style={{ ...ui.navItem, ...ui.navActive }}>Utang</a>
             <a href="/expenses" style={ui.navItem}>Expenses</a>
+            <a href="/account" style={ui.navItem}>Account Settings</a>
           </nav>
         </div>
 

@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users/user.entity';
-import { UsersService } from './users/users.service';
-import { AuthService } from './auth/auth.service';
-import { AuthController } from './auth/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
+
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
@@ -21,17 +20,17 @@ import { ExpensesModule } from './expenses/expenses.module';
       username: 'beto',
       password: 'beto2004',
       database: 'sari_sari_db',
-      entities: [
-        User,
-        __dirname + '/**/*.entity{.ts,.js}', // this will automatically load all entities
-      ],
+      autoLoadEntities: true, // 👈 cleaner than listing entities manually
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User]),
+
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'YOUR_SECRET_KEY',
       signOptions: { expiresIn: '1h' },
     }),
+
+    AuthModule,
+    UsersModule, // 👈 THIS IS ENOUGH for /users routes
     DashboardModule,
     CategoriesModule,
     ProductsModule,
@@ -39,7 +38,5 @@ import { ExpensesModule } from './expenses/expenses.module';
     UtangModule,
     ExpensesModule,
   ],
-  controllers: [AuthController],
-  providers: [UsersService, AuthService],
 })
 export class AppModule {}
