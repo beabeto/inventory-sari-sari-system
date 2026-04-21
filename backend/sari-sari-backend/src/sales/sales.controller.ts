@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, BadRequestException } from "@nestjs/common";
+import { Controller, Get, Post, Body, Query } from "@nestjs/common";
 import { SalesService } from "./sales.service";
 
 @Controller("sales")
@@ -10,12 +10,6 @@ export class SalesController {
     return this.service.getToday();
   }
 
-  // ✅ ADD THIS (IMPORTANT FOR FRONTEND)
-  @Get("today/list")
-  getTodayList() {
-    return this.service.recentToday();
-  }
-
   @Post("today")
   create(@Body() body: { product_id: number; quantity: number }) {
     return this.service.create(body);
@@ -23,7 +17,6 @@ export class SalesController {
 
   @Get("history/daily")
   daily(@Query("date") date: string) {
-    if (!date) throw new BadRequestException("date is required");
     return this.service.daily(date);
   }
 
@@ -33,13 +26,12 @@ export class SalesController {
   }
 
   @Get("history/monthly")
-  monthly(@Query("year") year?: string) {
-    const parsedYear = Number(year);
+  monthly(@Query("year") year: string) {
+    return this.service.monthly(Number(year));
+  }
 
-    if (!year || isNaN(parsedYear)) {
-      return this.service.monthly(new Date().getFullYear());
-    }
-
-    return this.service.monthly(parsedYear);
+  @Get("history/yearly")
+  yearly() {
+    return this.service.yearly();
   }
 }

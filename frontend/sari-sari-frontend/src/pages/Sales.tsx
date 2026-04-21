@@ -24,7 +24,7 @@ const WEEK_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 export default function Sales() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [salesTotal, setSalesTotal] = useState(0); // ✅ FIXED
+  const [salesTotal, setSalesTotal] = useState(0);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [mode, setMode] =
     useState<"daily" | "weekly" | "monthly" | "yearly">("daily");
@@ -32,7 +32,6 @@ export default function Sales() {
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
-
   const [phTime, setPhTime] = useState("");
 
   /* ================= TIME ================= */
@@ -62,25 +61,20 @@ export default function Sales() {
   };
 
   const fetchSales = async () => {
-  try {
-    const res = await axios.get(`${API_URL}/sales/today`);
-
-    // ✅ SAFE PARSE (handles empty, null, undefined)
-    const total = Number(res.data?.[0]?.total ?? 0);
-
-    setSalesTotal(total);
-  } catch (err) {
-    console.error("Failed to fetch sales:", err);
-    setSalesTotal(0);
-  }
-};
+    try {
+      const res = await axios.get(`${API_URL}/sales/today`);
+      const total = Number(res.data?.[0]?.total ?? 0);
+      setSalesTotal(total);
+    } catch {
+      setSalesTotal(0);
+    }
+  };
 
   const fetchHistory = async () => {
-    const now = new Date();
     let url = "";
 
     if (mode === "daily") {
-      const today = now.toISOString().split("T")[0];
+      const today = new Date().toISOString().split("T")[0];
       url = `${API_URL}/sales/history/daily?date=${today}`;
     }
 
@@ -89,7 +83,7 @@ export default function Sales() {
     }
 
     if (mode === "monthly") {
-      url = `${API_URL}/sales/history/monthly?year=${now.getFullYear()}`;
+      url = `${API_URL}/sales/history/monthly?year=${new Date().getFullYear()}`;
     }
 
     if (mode === "yearly") {
@@ -117,76 +111,43 @@ export default function Sales() {
 
     setShowModal(false);
     setQuantity(1);
+    setSelectedProductId(null);
 
     fetchProducts();
     fetchSales();
     fetchHistory();
   };
 
-  /* ================= WEEK FIX ================= */
-  const normalizeWeekly = (data: any[]) => {
-    const map = Array(7).fill(0);
-
-    data.forEach((d) => {
-      const index =
-        typeof d.dayIndex === "number"
-          ? d.dayIndex === 0
-            ? 6
-            : d.dayIndex - 1
-          : WEEK_DAYS.indexOf(String(d.day).toUpperCase().slice(0, 3));
-
-      if (index >= 0 && index < 7) {
-        map[index] = Number(d.totalSales || d.sales || 0);
-      }
-    });
-
-    return WEEK_DAYS.map((day, i) => ({
-      name: day,
-      sales: map[i],
-    }));
-  };
-
   /* ================= CHART DATA ================= */
   const chartData = () => {
-    const months = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
-    ];
-
     if (mode === "weekly") {
-      return normalizeWeekly(historyData);
+      return historyData.map((d: any) => ({
+        name: d.day,
+        sales: Number(d.totalSales || 0),
+      }));
     }
 
     if (mode === "monthly") {
-      const map = Array(12).fill(0);
-
-      historyData.forEach((d: any) => {
-        const m = Number(d.month) - 1;
-        if (m >= 0 && m < 12) {
-          map[m] += Number(d.totalSales || d.sales || 0);
-        }
-      });
-
-      return map.map((v, i) => ({
-        name: months[i],
-        sales: v,
+      return historyData.map((d: any) => ({
+        name: `Month ${d.month}`,
+        sales: Number(d.totalSales || 0),
       }));
     }
 
     if (mode === "yearly") {
-      return historyData.map((h: any) => ({
-        name: `Year ${h.year}`,
-        sales: Number(h.totalSales || h.sales || 0),
+      return historyData.map((d: any) => ({
+        name: `Year ${d.year}`,
+        sales: Number(d.totalSales || 0),
       }));
     }
 
-    return historyData.map((h: any) => ({
-      name: h.date,
-      sales: Number(h.totalSales || h.sales || 0),
+    return historyData.map((d: any) => ({
+      name: d.date,
+      sales: Number(d.totalSales || 0),
     }));
   };
 
-  const totalSales = salesTotal; // ✅ FIXED
+  const totalSales = salesTotal;
   const profit = totalSales * 0.3;
   const lowStock = products.filter((p) => p.stock <= 5);
 
@@ -197,6 +158,7 @@ export default function Sales() {
 
   return (
     <div style={ui.wrapper}>
+      {/* SIDEBAR */}
       <aside style={ui.sidebar}>
         <h2 style={ui.logo}>Sari-Sari Store</h2>
 
@@ -207,16 +169,20 @@ export default function Sales() {
           <a href="/sales" style={{ ...ui.link, ...ui.active }}>Sales</a>
           <a href="/utang" style={ui.link}>Utang</a>
           <a href="/expenses" style={ui.link}>Expenses</a>
-          <a href="/account" style={ui.navItem}>Account Settings</a>
+          <a href="/account" style={ui.link}>Account Settings</a>
         </nav>
 
-        <button style={ui.logoutBtn} onClick={handleLogout}>Logout</button>
+        <button style={ui.logoutBtn} onClick={handleLogout}>
+          Logout
+        </button>
       </aside>
 
+      {/* MAIN */}
       <main style={ui.main}>
         <h1 style={ui.title}>Sales Dashboard</h1>
         <p style={ui.time}>🇵🇭 {phTime}</p>
 
+        {/* ACTIONS */}
         <div style={ui.actions}>
           {["daily", "weekly", "monthly", "yearly"].map((m) => (
             <button key={m} onClick={() => setMode(m as any)} style={ui.btn}>
@@ -229,6 +195,7 @@ export default function Sales() {
           </button>
         </div>
 
+        {/* CARDS */}
         <div style={ui.cards}>
           <div style={ui.card}>💰 ₱{totalSales.toFixed(2)}</div>
           <div style={ui.card}>📈 ₱{profit.toFixed(2)}</div>
@@ -236,6 +203,7 @@ export default function Sales() {
           <div style={ui.card}>⚠ {lowStock.length}</div>
         </div>
 
+        {/* CHART */}
         <div style={ui.chart}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData()}>
@@ -248,6 +216,7 @@ export default function Sales() {
           </ResponsiveContainer>
         </div>
 
+        {/* MODAL */}
         {showModal && (
           <div style={ui.modalBg}>
             <div style={ui.modal}>
