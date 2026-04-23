@@ -6,6 +6,9 @@ Dashboard Overview
 ## Purpose
 Show a quick real-time overview of store performance, alerts, and recent activity.
 
+## Database Note
+This page displays aggregated data read from the system database, including products, categories, sales, utang, and expenses.
+
 ## User Story
 As a store owner or cashier, I want to see the most important store metrics in one page so I can monitor daily operations quickly.
 

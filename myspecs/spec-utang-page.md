@@ -6,6 +6,9 @@ Utang Management
 ## Purpose
 Track customer debts, itemized borrowed products, payment status, and debt record maintenance.
 
+## Database Note
+Utang records and their item details are stored in the system database. Create, update, toggle, and delete actions must persist correctly in the backend database.
+
 ## User Story
 As a store owner, I want to record and update customer utang so I can monitor unpaid balances accurately.
 

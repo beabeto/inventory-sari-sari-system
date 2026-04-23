@@ -6,6 +6,9 @@ Account Settings
 ## Purpose
 Allow an authenticated user to manage profile details and account security.
 
+## Database Note
+User profile data and passwords are stored in the system database. Profile updates and password changes must persist securely in the database.
+
 ## User Story
 As a logged-in user, I want to update my username and change my password so I can maintain my account information securely.
 

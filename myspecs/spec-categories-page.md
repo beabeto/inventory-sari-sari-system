@@ -6,6 +6,9 @@ Category Management
 ## Purpose
 Let users create, view, update, delete, and search product categories.
 
+## Database Note
+Category records are stored in the system database. Create, update, and delete actions must persist changes in the categories table.
+
 ## User Story
 As a store user, I want to manage categories so that products stay organized and easy to browse.
 

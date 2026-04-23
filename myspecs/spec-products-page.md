@@ -6,6 +6,9 @@ Product Management
 ## Purpose
 Allow users to manage inventory items, view stock and value, and filter products by category.
 
+## Database Note
+Product and category data are stored in the system database. All product CRUD actions must persist changes in the database and reflect current inventory values.
+
 ## User Story
 As a store user, I want to add, update, delete, search, and filter products so that inventory stays accurate and manageable.
 

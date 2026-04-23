@@ -6,6 +6,9 @@ Expense Tracking
 ## Purpose
 Allow users to record operating expenses, filter them by date, and compare expenses against current sales.
 
+## Database Note
+Expense records are stored in the system database. Added and deleted expenses must persist in the backend database for reporting and profit calculations.
+
 ## User Story
 As a store owner, I want to track daily expenses so I can see how they affect profit.
 

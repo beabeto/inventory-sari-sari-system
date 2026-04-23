@@ -6,6 +6,9 @@ Sales Dashboard and Transaction Entry
 ## Purpose
 Allow users to record sales and view sales history across daily, weekly, monthly, and yearly modes.
 
+## Database Note
+Sales transactions are stored in the system database. Saving a sale must create a persistent sales record and update related product stock in the database.
+
 ## User Story
 As a cashier or owner, I want to record product sales and review sales history so I can monitor store performance over time.
 

@@ -6,6 +6,9 @@ Login Page
 ## Purpose
 Allow a user to authenticate with username and password and enter the protected SSIMS pages.
 
+## Database Note
+This page authenticates against user records stored in the system database. User credentials and account data are persisted in the backend database.
+
 ## User Story
 As an admin or cashier, I want to log in using my account so I can access the store system securely.
 
