@@ -8,6 +8,7 @@ import { Product } from '../products/product.entity';
 import { Sale } from '../sales/sale.entity';
 import { Utang } from '../utang/utang.entity';
 import { Expense } from '../expenses/expenses.entity';
+import { Category } from '../categories/category.entity';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { Expense } from '../expenses/expenses.entity';
       Product,
       Sale,
       Utang,
-      Expense, // ✅ IMPORTANT
+      Expense,
+      Category, 
     ]),
   ],
   providers: [DashboardService],

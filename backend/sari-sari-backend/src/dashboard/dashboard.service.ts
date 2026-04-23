@@ -6,6 +6,7 @@ import { Product } from '../products/product.entity';
 import { Sale } from '../sales/sale.entity';
 import { Utang } from '../utang/utang.entity';
 import { Expense } from '../expenses/expenses.entity';
+import { Category } from '../categories/category.entity';
 
 @Injectable()
 export class DashboardService {
@@ -21,16 +22,16 @@ export class DashboardService {
 
     @InjectRepository(Expense)
     private expenseRepo: Repository<Expense>,
+
+    @InjectRepository(Category)
+    private categoryRepo: Repository<Category>,
   ) {}
 
   /* ================= DASHBOARD ================= */
   async getDashboard() {
     const totalProducts = await this.productRepo.count();
 
-    const totalCategoriesRaw = await this.productRepo
-      .createQueryBuilder('p')
-      .select('COUNT(DISTINCT p.category_id)', 'count')
-      .getRawOne();
+    const totalCategories = await this.categoryRepo.count();
 
     const lowStock = await this.productRepo
       .createQueryBuilder('p')
@@ -72,7 +73,7 @@ export class DashboardService {
 
     return {
       totalProducts,
-      totalCategories: Number(totalCategoriesRaw?.count || 0),
+      totalCategories,
       lowStock,
       salesToday: sales,
       expensesToday: expenses,
