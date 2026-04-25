@@ -220,7 +220,7 @@ export default function Sales() {
         {showModal && (
           <div style={ui.modalBg}>
             <div style={ui.modal}>
-              <h3>Add Sale</h3>
+              <h3 style={ui.title}>Add Sale</h3>
 
               <select
                 style={ui.input}
@@ -267,12 +267,35 @@ const ui: any = {
   title: { fontSize: 26, fontWeight: 800, color: "#1e3a8a" },
   time: { color: "#64748b" },
   actions: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 15 },
-  btn: { padding: 8, background: "#2563eb", color: "white", borderRadius: 6 },
-  addBtn: { padding: 8, background: "#16a34a", color: "white", borderRadius: 6 },
+  btn: { background: "#16a34a",
+    color: "white",
+    border: "none",
+    padding: "10px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    flex: 1, },
+  addBtn: { background: "#d1d5db",
+    color: "black",
+    border: "none",
+    padding: "10px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    flex: 1, },
   cards: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 },
   card: { background: "white", padding: 15, borderRadius: 10, fontWeight: 600, color: "blue" },
   chart: { height: 300, background: "white", padding: 10, borderRadius: 10, marginTop: 15 },
   modalBg: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" },
-  modal: { background: "white", padding: 20, width: 350, borderRadius: 10 },
-  input: { width: "100%", padding: 10, marginBottom: 10 }
+  modal: { background: "white",
+    padding: "25px",
+    borderRadius: "15px",
+    width: "400px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px", },
+  input: { padding: "12px 15px",
+    borderRadius: "10px",
+    border: "1px solid #dbeafe",
+    fontSize: "14px",
+    color: "black",
+    backgroundColor: "white", }
 };
