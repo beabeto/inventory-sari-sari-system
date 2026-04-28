@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import client from "../api/client";
 import Sidebar from "../components/Sidebar";
 
 /* ================= INTERFACE ================= */
@@ -11,23 +11,22 @@ interface Expense {
 }
 
 export default function Expenses() {
-  const API_URL = "http://localhost:3000";
-
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [debugUser, setDebugUser] = useState<any>(null);
+  const [lastResp, setLastResp] = useState<any>(null);
 
   const [salesToday, setSalesToday] = useState(0);
 
   /* ================= FETCH ================= */
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get(
-        `${API_URL}/expenses?date=${selectedDate || ""}`
-      );
-      setExpenses(res.data);
+      const res = await client.get(`/expenses?date=${selectedDate || ""}`);
+      setLastResp(res.data);
+      setExpenses(res.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -35,7 +34,8 @@ export default function Expenses() {
 
   const fetchSales = async () => {
     try {
-      const res = await axios.get(`${API_URL}/sales/today`);
+      const res = await client.get(`/sales/today`);
+      setLastResp(res.data);
       const total = res.data.reduce(
         (sum: number, s: any) => sum + Number(s.total || 0),
         0
@@ -47,6 +47,16 @@ export default function Expenses() {
   };
 
   useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setDebugUser(payload);
+      }
+    } catch (e) {
+      // ignore
+    }
+
     fetchExpenses();
     fetchSales();
   }, [selectedDate]);
@@ -55,25 +65,34 @@ export default function Expenses() {
   const addExpense = async () => {
     if (!category || amount <= 0) return;
 
-    // ✅ FIX: send correct fields to backend
-    await axios.post(`${API_URL}/expenses`, {
-      name: `${category} - ${description || ""}`,
-      amount,
-      date: selectedDate || new Date().toISOString().split("T")[0],
-    });
+    try {
+      const res = await client.post(`/expenses`, {
+        name: `${category} - ${description || ""}`,
+        amount,
+        date: selectedDate || new Date().toISOString().split("T")[0],
+      });
+      setLastResp(res.data);
 
-    setCategory("");
-    setDescription("");
-    setAmount(0);
-    fetchExpenses();
+      setCategory("");
+      setDescription("");
+      setAmount(0);
+      fetchExpenses();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   /* ================= DELETE ================= */
   const deleteExpense = async (id: number) => {
     if (!confirm("Delete this expense?")) return;
 
-    await axios.delete(`${API_URL}/expenses/${id}`);
-    fetchExpenses();
+    try {
+      const res = await client.delete(`/expenses/${id}`);
+      setLastResp(res.data);
+      fetchExpenses();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   /* ================= TOTAL ================= */
@@ -291,5 +310,5 @@ const ui: { [key: string]: React.CSSProperties } = {
     padding: "30px",
     textAlign: "center",
     color: "#94a3b8",
-  },
+  }
 };

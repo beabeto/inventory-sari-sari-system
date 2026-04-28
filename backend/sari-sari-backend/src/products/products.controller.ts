@@ -7,55 +7,44 @@ import {
   Param,
   Body,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly service: ProductsService) {}
 
+  @UseGuards(AuthGuard('jwt'))
   @Get()
-  findAll(@Query('category_id') categoryId?: string) {
-    return this.service.findAll(
-      categoryId ? Number(categoryId) : undefined,
-    );
+  findAll(@Req() req: any, @Query('category_id') categoryId?: string) {
+    return this.service.findAll(req.user, categoryId ? Number(categoryId) : undefined);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
-  create(
-    @Body()
-    body: {
-      name: string;
-      price: number;
-      stock: number;
-      category_id: number;
-    },
-  ) {
-    return this.service.create(body);
+  create(@Req() req: any, @Body() body: any) {
+    return this.service.create(req.user, body);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body()
-    body: {
-      name: string;
-      price: number;
-      stock: number;
-      category_id: number;
-    },
-  ) {
-    return this.service.update(Number(id), body);
+  update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
+    return this.service.update(req.user, Number(id), body);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(Number(id));
+  remove(@Req() req: any, @Param('id') id: string) {
+    return this.service.remove(req.user, Number(id));
   }
 
   // ✅ FIXED: Low stock endpoint
+  @UseGuards(AuthGuard('jwt'))
   @Get('low-stock')
-  getLowStock() {
-    return this.service.getLowStock();
+  getLowStock(@Req() req: any) {
+    return this.service.getLowStock(req.user);
   }
 }

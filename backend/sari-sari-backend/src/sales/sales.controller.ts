@@ -1,37 +1,39 @@
-import { Controller, Get, Post, Body, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, Query, UseGuards, Req } from "@nestjs/common";
 import { SalesService } from "./sales.service";
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller("sales")
 export class SalesController {
   constructor(private readonly service: SalesService) {}
 
   @Get("today")
-  getToday() {
-    return this.service.getToday();
+  getToday(@Req() req: any) {
+    return this.service.getToday(req.user.userId);
   }
 
   @Post("today")
-  create(@Body() body: { product_id: number; quantity: number }) {
-    return this.service.create(body);
+  create(@Req() req: any, @Body() body: { product_id: number; quantity: number }) {
+    return this.service.create({ ...body, user_id: req.user.userId });
   }
 
   @Get("history/daily")
-  daily(@Query("date") date: string) {
-    return this.service.daily(date);
+  daily(@Req() req: any, @Query("date") date: string) {
+    return this.service.daily(date, req.user.userId);
   }
 
   @Get("history/weekly")
-  weekly() {
-    return this.service.weekly();
+  weekly(@Req() req: any) {
+    return this.service.weekly(req.user.userId);
   }
 
   @Get("history/monthly")
-  monthly(@Query("year") year: string) {
-    return this.service.monthly(Number(year));
+  monthly(@Req() req: any, @Query("year") year: string) {
+    return this.service.monthly(Number(year), req.user.userId);
   }
 
   @Get("history/yearly")
-  yearly() {
-    return this.service.yearly();
+  yearly(@Req() req: any) {
+    return this.service.yearly(req.user.userId);
   }
 }

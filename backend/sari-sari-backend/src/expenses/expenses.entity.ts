@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @Entity('expenses') // ✅ FORCE correct table
 export class Expense {
@@ -13,4 +14,11 @@ export class Expense {
 
   @Column({ type: 'date' })
   date: Date;
+
+  @Column({ nullable: true })
+  user_id?: number;
+
+  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 }

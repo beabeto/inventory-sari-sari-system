@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login } from "../api/auth";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -51,6 +51,10 @@ export default function Login() {
           </button>
 
         </form>
+
+        <p style={styles.linkText}>
+          No account yet? <Link to="/register">Register</Link>
+        </p>
 
       </div>
 
@@ -113,6 +117,11 @@ button:{
   fontSize:"16px",
   fontWeight:"bold",
   cursor:"pointer"
+},
+
+linkText:{
+  marginTop:"20px",
+  color:"#475569"
 }
 
 };

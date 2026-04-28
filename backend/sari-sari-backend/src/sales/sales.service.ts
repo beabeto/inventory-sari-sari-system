@@ -11,7 +11,15 @@ export class SalesService {
   ) {}
 
   /* ================= TODAY TOTAL ================= */
-  async getToday() {
+  async getToday(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(`
+        SELECT IFNULL(SUM(total), 0) as total
+        FROM sales
+        WHERE DATE(sale_date) = CURDATE() AND user_id = ?
+      `, [userId]);
+    }
+
     return this.saleRepo.query(`
       SELECT IFNULL(SUM(total), 0) as total
       FROM sales
@@ -20,7 +28,21 @@ export class SalesService {
   }
 
   /* ================= DAILY ================= */
-  async daily(date: string) {
+  async daily(date: string, userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(
+        `
+        SELECT 
+          DATE(sale_date) as date,
+          IFNULL(SUM(total), 0) as totalSales
+        FROM sales
+        WHERE DATE(sale_date) = ? AND user_id = ?
+        GROUP BY DATE(sale_date)
+        `,
+        [date, userId]
+      );
+    }
+
     return this.saleRepo.query(
       `
       SELECT 
@@ -35,7 +57,18 @@ export class SalesService {
   }
 
   /* ================= WEEKLY ================= */
-  async weekly() {
+  async weekly(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(`
+        SELECT 
+          DAYNAME(sale_date) as day,
+          IFNULL(SUM(total), 0) as totalSales
+        FROM sales
+        WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1) AND user_id = ?
+        GROUP BY DAYNAME(sale_date)
+      `, [userId]);
+    }
+
     return this.saleRepo.query(`
       SELECT 
         DAYNAME(sale_date) as day,
@@ -47,7 +80,22 @@ export class SalesService {
   }
 
   /* ================= MONTHLY ================= */
-  async monthly(year: number) {
+  async monthly(year: number, userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(
+        `
+        SELECT 
+          MONTH(sale_date) as month,
+          IFNULL(SUM(total), 0) as totalSales
+        FROM sales
+        WHERE YEAR(sale_date) = ? AND user_id = ?
+        GROUP BY MONTH(sale_date)
+        ORDER BY month ASC
+        `,
+        [year, userId]
+      );
+    }
+
     return this.saleRepo.query(
       `
       SELECT 
@@ -63,7 +111,19 @@ export class SalesService {
   }
 
   /* ================= YEARLY (FIXED) ================= */
-  async yearly() {
+  async yearly(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(`
+        SELECT 
+          YEAR(sale_date) as year,
+          IFNULL(SUM(total), 0) as totalSales
+        FROM sales
+        WHERE user_id = ?
+        GROUP BY YEAR(sale_date)
+        ORDER BY year ASC
+      `, [userId]);
+    }
+
     return this.saleRepo.query(`
       SELECT 
         YEAR(sale_date) as year,
@@ -74,7 +134,7 @@ export class SalesService {
     `);
   }
 
-  async create(data: { product_id: number; quantity: number }) {
+  async create(data: { product_id: number; quantity: number; user_id?: number }) {
   const product = await this.saleRepo.query(
     `SELECT price, stock FROM products WHERE product_id = ?`,
     [data.product_id]
@@ -91,9 +151,9 @@ export class SalesService {
   }
 
   await this.saleRepo.query(
-    `INSERT INTO sales (product_id, quantity, price, total, sale_date)
-     VALUES (?, ?, ?, ?, NOW())`,
-    [data.product_id, data.quantity, price, price * data.quantity]
+    `INSERT INTO sales (product_id, quantity, price, total, sale_date, user_id)
+     VALUES (?, ?, ?, ?, NOW(), ?)`,
+    [data.product_id, data.quantity, price, price * data.quantity, (data as any).user_id ?? null]
   );
 
   await this.saleRepo.query(

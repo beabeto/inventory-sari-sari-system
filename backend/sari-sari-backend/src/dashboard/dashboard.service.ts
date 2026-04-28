@@ -28,48 +28,103 @@ export class DashboardService {
   ) {}
 
   /* ================= DASHBOARD ================= */
-  async getDashboard() {
-    const totalProducts = await this.productRepo.count();
+  async getDashboard(userId?: number) {
+    // Count products owned by user if userId provided
+    const totalProducts =
+      typeof userId === 'number'
+        ? await this.productRepo.count({
+            where: { user_id: userId } as any,
+          })
+        : await this.productRepo.count();
 
-    const totalCategories = await this.categoryRepo.count();
+    // Count categories owned by user if provided
+    const totalCategories =
+      typeof userId === 'number'
+        ? await this.categoryRepo.count({
+            where: { user_id: userId } as any,
+          })
+        : await this.categoryRepo.count();
 
-    const lowStock = await this.productRepo
+    // Low stock for user
+    const lowStockQuery = this.productRepo
       .createQueryBuilder('p')
-      .where('p.stock <= :limit', { limit: 10 })
-      .getCount();
+      .where('p.stock <= :limit', { limit: 10 });
+
+    if (typeof userId === 'number') {
+      lowStockQuery.andWhere('p.user_id = :userId', { userId });
+    }
+
+    const lowStock = await lowStockQuery.getCount();
 
     /* ================= SALES ================= */
-    const salesTodayRaw = await this.saleRepo.query(`
-      SELECT IFNULL(SUM(quantity * price), 0) as total
-      FROM sales
-      WHERE DATE(CONVERT_TZ(sale_date, '+00:00', '+08:00')) = CURDATE()
-    `);
+    const salesTodayRaw =
+      typeof userId === 'number'
+        ? await this.saleRepo.query(
+            `
+            SELECT IFNULL(SUM(quantity * price), 0) as total
+            FROM sales
+            WHERE user_id = ?
+            AND DATE(sale_date) = CURDATE()
+            `,
+            [userId],
+          )
+        : await this.saleRepo.query(`
+            SELECT IFNULL(SUM(quantity * price), 0) as total
+            FROM sales
+            WHERE DATE(sale_date) = CURDATE()
+          `);
 
     const sales = Number(salesTodayRaw?.[0]?.total || 0);
 
-    /* ================= EXPENSES (SAFE FIX) ================= */
+    /* ================= EXPENSES ================= */
     let expenses = 0;
 
     try {
-      const expensesTodayRaw = await this.expenseRepo.query(`
-  SELECT IFNULL(SUM(amount), 0) as total
-  FROM expenses
-  WHERE date >= CURDATE()
-    AND date < CURDATE() + INTERVAL 1 DAY
-`);
+      if (typeof userId === 'number') {
+        const expensesTodayRaw = await this.expenseRepo.query(
+          `
+          SELECT IFNULL(SUM(amount), 0) as total
+          FROM expenses
+          WHERE user_id = ?
+          AND date >= CURDATE()
+          AND date < CURDATE() + INTERVAL 1 DAY
+          `,
+          [userId],
+        );
 
-      expenses = Number(expensesTodayRaw?.[0]?.total || 0);
+        expenses = Number(expensesTodayRaw?.[0]?.total || 0);
+      } else {
+        const expensesTodayRaw = await this.expenseRepo.query(`
+          SELECT IFNULL(SUM(amount), 0) as total
+          FROM expenses
+          WHERE date >= CURDATE()
+          AND date < CURDATE() + INTERVAL 1 DAY
+        `);
+
+        expenses = Number(expensesTodayRaw?.[0]?.total || 0);
+      }
     } catch (err) {
       console.warn('Expense table not found, defaulting to 0');
       expenses = 0;
     }
 
     /* ================= UTANG ================= */
-    const totalUtangRaw = await this.utangRepo.query(`
-      SELECT IFNULL(SUM(total_debt), 0) as total
-      FROM utang
-      WHERE is_paid = false
-    `);
+    const totalUtangRaw =
+      typeof userId === 'number'
+        ? await this.utangRepo.query(
+            `
+            SELECT IFNULL(SUM(total_debt), 0) as total
+            FROM utang
+            WHERE user_id = ?
+            AND is_paid = false
+            `,
+            [userId],
+          )
+        : await this.utangRepo.query(`
+            SELECT IFNULL(SUM(total_debt), 0) as total
+            FROM utang
+            WHERE is_paid = false
+          `);
 
     return {
       totalProducts,
@@ -83,31 +138,64 @@ export class DashboardService {
   }
 
   /* ================= RECENT SALES TODAY ================= */
-  async recentSalesToday() {
+  async recentSalesToday(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(
+        `
+        SELECT
+          s.sale_id AS sale_id,
+          s.sale_date AS sale_date,
+          s.quantity AS quantity,
+          s.price AS price,
+          (s.quantity * s.price) AS total
+        FROM sales s
+        WHERE s.user_id = ?
+        AND DATE(s.sale_date) = CURDATE()
+        ORDER BY s.sale_date DESC
+        LIMIT 20
+        `,
+        [userId],
+      );
+    }
+
     return this.saleRepo.query(`
-      SELECT 
+      SELECT
         s.sale_id AS sale_id,
         s.sale_date AS sale_date,
         s.quantity AS quantity,
         s.price AS price,
         (s.quantity * s.price) AS total
       FROM sales s
-      WHERE DATE(CONVERT_TZ(s.sale_date, '+00:00', '+08:00')) = CURDATE()
+      WHERE DATE(s.sale_date) = CURDATE()
       ORDER BY s.sale_date DESC
       LIMIT 20
     `);
   }
 
   /* ================= WEEKLY ================= */
-  async weekly() {
-    const raw = await this.saleRepo.query(`
-      SELECT 
-        DAYOFWEEK(sale_date) as dayIndex,
-        IFNULL(SUM(quantity * price), 0) as totalSales
-      FROM sales
-      WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1)
-      GROUP BY DAYOFWEEK(sale_date)
-    `);
+  async weekly(userId?: number) {
+    const raw =
+      typeof userId === 'number'
+        ? await this.saleRepo.query(
+            `
+            SELECT
+              DAYOFWEEK(sale_date) as dayIndex,
+              IFNULL(SUM(quantity * price), 0) as totalSales
+            FROM sales
+            WHERE user_id = ?
+            AND YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1)
+            GROUP BY DAYOFWEEK(sale_date)
+            `,
+            [userId],
+          )
+        : await this.saleRepo.query(`
+            SELECT
+              DAYOFWEEK(sale_date) as dayIndex,
+              IFNULL(SUM(quantity * price), 0) as totalSales
+            FROM sales
+            WHERE YEARWEEK(sale_date, 1) = YEARWEEK(CURDATE(), 1)
+            GROUP BY DAYOFWEEK(sale_date)
+          `);
 
     const week = Array(7).fill(0);
 
@@ -123,6 +211,7 @@ export class DashboardService {
 
     raw.forEach((d: any) => {
       const index = map[d.dayIndex];
+
       if (index !== undefined) {
         week[index] = Number(d.totalSales || 0);
       }
@@ -140,27 +229,45 @@ export class DashboardService {
   }
 
   /* ================= MONTHLY ================= */
-  async monthly(year?: number) {
+  async monthly(year?: number, userId?: number) {
     const safeYear =
-      !year || isNaN(year) ? new Date().getFullYear() : year;
+      !year || isNaN(year)
+        ? new Date().getFullYear()
+        : year;
 
-    const raw = await this.saleRepo.query(
-      `
-      SELECT 
-        MONTH(sale_date) as month,
-        IFNULL(SUM(quantity * price), 0) as totalSales
-      FROM sales
-      WHERE YEAR(sale_date) = ?
-      GROUP BY MONTH(sale_date)
-      ORDER BY month ASC
-      `,
-      [safeYear],
-    );
+    const raw =
+      typeof userId === 'number'
+        ? await this.saleRepo.query(
+            `
+            SELECT
+              MONTH(sale_date) as month,
+              IFNULL(SUM(quantity * price), 0) as totalSales
+            FROM sales
+            WHERE YEAR(sale_date) = ?
+            AND user_id = ?
+            GROUP BY MONTH(sale_date)
+            ORDER BY month ASC
+            `,
+            [safeYear, userId],
+          )
+        : await this.saleRepo.query(
+            `
+            SELECT
+              MONTH(sale_date) as month,
+              IFNULL(SUM(quantity * price), 0) as totalSales
+            FROM sales
+            WHERE YEAR(sale_date) = ?
+            GROUP BY MONTH(sale_date)
+            ORDER BY month ASC
+            `,
+            [safeYear],
+          );
 
     const months = Array(12).fill(0);
 
     raw.forEach((d: any) => {
       const i = Number(d.month) - 1;
+
       if (i >= 0 && i < 12) {
         months[i] = Number(d.totalSales || 0);
       }
@@ -173,9 +280,24 @@ export class DashboardService {
   }
 
   /* ================= YEARLY ================= */
-  async yearly() {
+  async yearly(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.saleRepo.query(
+        `
+        SELECT
+          YEAR(sale_date) as year,
+          IFNULL(SUM(quantity * price), 0) as totalSales
+        FROM sales
+        WHERE user_id = ?
+        GROUP BY YEAR(sale_date)
+        ORDER BY year ASC
+        `,
+        [userId],
+      );
+    }
+
     return this.saleRepo.query(`
-      SELECT 
+      SELECT
         YEAR(sale_date) as year,
         IFNULL(SUM(quantity * price), 0) as totalSales
       FROM sales

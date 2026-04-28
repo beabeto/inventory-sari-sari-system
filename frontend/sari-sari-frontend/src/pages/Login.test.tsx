@@ -13,5 +13,6 @@ describe('Login Page', () => {
 
     // Checks if "Login" button exists
     expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /register/i })).toBeInTheDocument();
   });
 });

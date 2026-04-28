@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import client from "../api/client";
 import Sidebar from "../components/Sidebar";
 
 /* ================= INTERFACES ================= */
@@ -27,8 +27,6 @@ interface Utang {
 
 /* ================= COMPONENT ================= */
 export default function UtangPage() {
-  const API_URL = "http://localhost:3000";
-
   const [utangList, setUtangList] = useState<Utang[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -41,13 +39,13 @@ export default function UtangPage() {
 
   /* ================= FETCH ================= */
   const fetchUtang = async () => {
-    const res = await axios.get(`${API_URL}/utang`);
+    const res = await client.get(`/utang`);
     setUtangList(res.data);
   };
 
   const fetchProducts = async () => {
-    const res = await axios.get(`${API_URL}/products`);
-    setProducts(res.data);
+    const res = await client.get(`/products`);
+    setProducts(res.data || []);
   };
 
   useEffect(() => {
@@ -57,19 +55,25 @@ export default function UtangPage() {
 
   /* ================= ADD ITEM ================= */
   const addItem = () => {
-    const product = products.find(
-      (p) => p.product_id === Number(selectedProduct)
-    );
-    if (!product || quantity <= 0) return;
+    const prodVal = Number(selectedProduct);
+    let product: any = products.find((p: any) => Number(p?.product_id ?? p) === prodVal);
+
+    if (!product) {
+      product = { product_id: prodVal, name: `#${prodVal}`, price: 0 };
+    }
+
+    if (quantity <= 0) return;
+
+    const price = Number(product.price ?? 0);
 
     setItems([
       ...items,
       {
         product_id: product.product_id,
-        product_name: product.name,
+        product_name: product.name ?? product.product_name ?? `#${product.product_id}`,
         quantity,
-        price: product.price,
-        subtotal: product.price * quantity,
+        price,
+        subtotal: price * quantity,
       },
     ]);
 
@@ -91,12 +95,12 @@ export default function UtangPage() {
     if (!customerName || items.length === 0) return;
 
     if (editId) {
-      await axios.put(`${API_URL}/utang/${editId}`, {
+      await client.put(`/utang/${editId}`, {
         name: customerName,
         items,
       });
     } else {
-      await axios.post(`${API_URL}/utang`, {
+      await client.post(`/utang`, {
         name: customerName,
         items,
       });
@@ -116,13 +120,13 @@ export default function UtangPage() {
 
   /* ================= TOGGLE PAID ================= */
   const togglePaid = async (id: number) => {
-    await axios.patch(`${API_URL}/utang/${id}/toggle`);
+    await client.patch(`/utang/${id}/toggle`);
     fetchUtang();
   };
 
   /* ================= DELETE ================= */
   const handleDelete = async (id: number) => {
-    await axios.delete(`${API_URL}/utang/${id}`);
+    await client.delete(`/utang/${id}`);
     fetchUtang();
   };
 
@@ -144,7 +148,6 @@ export default function UtangPage() {
     <div style={ui.fullscreenWrapper}>
       <Sidebar activePage="utang" />
 
-      {/* MAIN */}
       <main style={ui.mainContent}>
         <header style={ui.header}>
           <div>
@@ -238,9 +241,12 @@ export default function UtangPage() {
               onChange={(e) => setSelectedProduct(Number(e.target.value))}
             >
               <option value="">Select Product</option>
-              {products.map((p) => (
-                <option key={p.product_id} value={p.product_id}>
-                  {p.name} - ₱{p.price}
+              {products.map((p: any) => (
+                <option key={p?.product_id ?? String(p)} value={p?.product_id ?? p}>
+                  {(typeof p === "object")
+                    ? (p.name ?? p.product_name ?? `#${p.product_id}`)
+                    : String(p)}
+                  {typeof p === "object" ? ` - ₱${p.price ?? 0}` : ""}
                 </option>
               ))}
             </select>

@@ -5,7 +5,7 @@ import {
   type FormEvent,
   type ChangeEvent,
 } from "react";
-import axios from "axios";
+import client from "../api/client";
 import { getToken, setStoredProfile } from "../api/auth";
 import Sidebar from "../components/Sidebar";
 
@@ -23,11 +23,7 @@ export default function Account() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        });
+        const res = await client.get(`/users/me`);
 
         const nextUsername = res.data?.username || "";
         const nextProfileImage = res.data?.profileImage || "";
@@ -52,15 +48,7 @@ export default function Account() {
     e.preventDefault();
 
     try {
-      const res = await axios.put(
-        `${API_URL}/users/update-profile`,
-        { username, profileImage },
-        {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        },
-      );
+      const res = await client.put(`/users/update-profile`, { username, profileImage });
 
       setMessage(res.data?.message || "Profile updated successfully");
       setStoredProfile({
@@ -109,18 +97,10 @@ export default function Account() {
     e.preventDefault();
 
     try {
-      const res = await axios.put(
-        `${API_URL}/users/change-password`,
-        {
-          currentPassword,
-          newPassword,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        },
-      );
+      const res = await client.put(`/users/change-password`, {
+        currentPassword,
+        newPassword,
+      });
 
       setMessage(res.data?.message || "Password changed successfully");
       setCurrentPassword("");

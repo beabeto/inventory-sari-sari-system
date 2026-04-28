@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import client from "../api/client";
 import Sidebar from "../components/Sidebar";
 
 import {
@@ -41,8 +41,6 @@ interface Sale {
 type ChartMode = "today" | "weekly" | "monthly";
 
 export default function Dashboard() {
-  const API_URL = "http://localhost:3000";
-
   const [data, setData] = useState<DashboardData>({
     totalProducts: 0,
     totalCategories: 0,
@@ -67,11 +65,11 @@ export default function Dashboard() {
       try {
         const [dashRes, stockRes, recentRes, weeklyRes, monthlyRes] =
           await Promise.all([
-            axios.get(`${API_URL}/dashboard`),
-            axios.get(`${API_URL}/products/low-stock`),
-            axios.get(`${API_URL}/dashboard/recent-today`),
-            axios.get(`${API_URL}/dashboard/weekly`),
-            axios.get(`${API_URL}/dashboard/monthly`),
+            client.get(`/dashboard`),
+            client.get(`/products/low-stock`),
+            client.get(`/dashboard/recent-today`),
+            client.get(`/dashboard/weekly`),
+            client.get(`/dashboard/monthly`),
           ]);
 
         setData({
@@ -91,14 +89,18 @@ export default function Dashboard() {
     };
 
     fetchAll();
+
     const interval = setInterval(fetchAll, 8000);
+
     return () => clearInterval(interval);
   }, []);
 
   /* ================= FORMAT ================= */
   const formatDate = (date: any) => {
     if (!date) return "-";
+
     const d = new Date(date);
+
     return isNaN(d.getTime()) ? "-" : d.toLocaleString();
   };
 
@@ -106,7 +108,7 @@ export default function Dashboard() {
     return num(s.total) || num(s.quantity) * num(s.price);
   };
 
-  /* ================= CHART DATA FIX ================= */
+  /* ================= CHART DATA ================= */
   const chartData = () => {
     const sales = num(data.salesToday);
     const expenses = num(data.expensesToday);
@@ -134,8 +136,18 @@ export default function Dashboard() {
 
     if (chartMode === "monthly") {
       const months = [
-        "Jan","Feb","Mar","Apr","May","Jun",
-        "Jul","Aug","Sep","Oct","Nov","Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
 
       return monthlyData.map((d: any) => ({
@@ -185,21 +197,27 @@ export default function Dashboard() {
 
           <div style={{ ...ui.card, borderLeft: "5px solid #16a34a" }}>
             <h3 style={ui.cardTitle}>Sales Today</h3>
-            <p style={ui.cardValue}>₱{num(data.salesToday).toLocaleString()}</p>
+            <p style={ui.cardValue}>
+              ₱{num(data.salesToday).toLocaleString()}
+            </p>
           </div>
 
           <div style={{ ...ui.card, borderLeft: "5px solid #f59e0b" }}>
             <h3 style={ui.cardTitle}>Expenses Today</h3>
-            <p style={ui.cardValue}>₱{num(data.expensesToday).toLocaleString()}</p>
+            <p style={ui.cardValue}>
+              ₱{num(data.expensesToday).toLocaleString()}
+            </p>
           </div>
 
           <div style={{ ...ui.card, borderLeft: "5px solid #10b981" }}>
             <h3 style={ui.cardTitle}>Profit</h3>
-            <p style={ui.cardValue}>₱{num(data.profitToday).toLocaleString()}</p>
+            <p style={ui.cardValue}>
+              ₱{num(data.profitToday).toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* CHART (LINE - COLORFUL) */}
+        {/* CHART */}
         <div style={ui.tableContainer}>
           <div style={ui.chartHeader}>
             <h3 style={ui.sectionTitle}>Sales Analytics</h3>
@@ -265,6 +283,7 @@ export default function Dashboard() {
             recentSales.map((s) => (
               <div key={s.sale_id} style={ui.row}>
                 <span>{formatDate(s.sale_date)}</span>
+
                 <span style={{ color: "#16a34a", fontWeight: 700 }}>
                   ₱{getSaleTotal(s).toLocaleString()}
                 </span>
@@ -286,6 +305,7 @@ export default function Dashboard() {
               }}
             >
               <span>{item.name}</span>
+
               <span style={{ color: "#ef4444", fontWeight: 700 }}>
                 {item.stock} left
               </span>
@@ -299,20 +319,108 @@ export default function Dashboard() {
 
 /* ================= UI ================= */
 const ui: any = {
-  fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
-  mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
-  header: { display: "flex", justifyContent: "space-between", marginBottom: "30px" },
-  title: { fontSize: "28px", color: "#1e3a8a", fontWeight: 800 },
-  subtitle: { color: "#60a5fa" },
-  dateDisplay: { background: "white", padding: "10px 16px", borderRadius: "12px", fontWeight: 600, color: "#1e40af" },
-  cardGrid: { display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "20px" },
-  card: { background: "white", padding: "20px", borderRadius: "16px", boxShadow: "0 10px 25px rgba(30,58,138,0.05)" },
-  cardTitle: { fontSize: "12px", color: "#64748b", textTransform: "uppercase" },
-  cardValue: { fontSize: "26px", fontWeight: 800, marginTop: "10px", color: "blue" },
-  tableContainer: { background: "white", borderRadius: "20px", padding: "20px", marginTop: "20px" },
-  sectionTitle: { fontSize: "18px", fontWeight: 700, color: "#1e3a8a" },
-  row: { display: "flex", justifyContent: "space-between", padding: "12px", borderBottom: "1px solid #f1f5f9", color: "blue" },
-  chartHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  toggle: { display: "flex", gap: 8 },
-  toggleBtn: { padding: "6px 10px", border: "none", borderRadius: 6, cursor: "pointer" },
+  fullscreenWrapper: {
+    display: "flex",
+    width: "100vw",
+    height: "100vh",
+    fontFamily: "'Inter', sans-serif",
+    overflow: "hidden",
+    background: "#f0f7ff",
+  },
+
+  mainContent: {
+    flex: 1,
+    padding: "40px",
+    overflowY: "auto",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "30px",
+  },
+
+  title: {
+    fontSize: "28px",
+    color: "#1e3a8a",
+    fontWeight: 800,
+  },
+
+  subtitle: {
+    color: "#60a5fa",
+  },
+
+  dateDisplay: {
+    background: "white",
+    padding: "10px 16px",
+    borderRadius: "12px",
+    fontWeight: 600,
+    color: "#1e40af",
+  },
+
+  cardGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(6, 1fr)",
+    gap: "20px",
+  },
+
+  card: {
+    background: "white",
+    padding: "20px",
+    borderRadius: "16px",
+    boxShadow: "0 10px 25px rgba(30,58,138,0.05)",
+  },
+
+  cardTitle: {
+    fontSize: "12px",
+    color: "#64748b",
+    textTransform: "uppercase",
+  },
+
+  cardValue: {
+    fontSize: "26px",
+    fontWeight: 800,
+    marginTop: "10px",
+    color: "blue",
+  },
+
+  tableContainer: {
+    background: "white",
+    borderRadius: "20px",
+    padding: "20px",
+    marginTop: "20px",
+  },
+
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: 700,
+    color: "#1e3a8a",
+  },
+
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "12px",
+    borderBottom: "1px solid #f1f5f9",
+    color: "blue",
+  },
+
+  chartHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  toggle: {
+    display: "flex",
+    gap: 8,
+  },
+
+  toggleBtn: {
+    padding: "6px 10px",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+  },
 };

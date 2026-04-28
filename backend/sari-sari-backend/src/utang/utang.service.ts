@@ -19,11 +19,15 @@ export class UtangService {
     private productRepo: Repository<Product>,
   ) {}
 
-  findAll() {
+  findAll(userId?: number) {
+    if (typeof userId === 'number') {
+      return this.utangRepo.find({ where: { user_id: userId }, relations: ['items'] });
+    }
+
     return this.utangRepo.find({ relations: ['items'] });
   }
 
-  async create(data: { name: string; items: any[] }) {
+  async create(userId: number | undefined, data: { name: string; items: any[] }) {
     const items: UtangItem[] = [];
 
     for (const item of data.items) {
@@ -61,14 +65,18 @@ export class UtangService {
       total_debt: total,
       is_paid: false,
       items,
+      user_id: typeof userId === 'number' ? userId : (data as any).user_id ?? undefined,
     });
 
     return this.utangRepo.save(utang);
   }
 
-  async update(id: number, data: { name: string; items: any[] }) {
+  async update(userId: number | undefined, id: number, data: { name: string; items: any[] }) {
+    const where: any = { utang_id: id };
+    if (typeof userId === 'number') where.user_id = userId;
+
     const existing = await this.utangRepo.findOne({
-      where: { utang_id: id },
+      where,
       relations: ['items'],
     });
 
@@ -118,19 +126,22 @@ export class UtangService {
     return this.utangRepo.save(existing);
   }
 
-  async togglePaid(id: number) {
-    const utang = await this.utangRepo.findOneBy({ utang_id: id });
+  async togglePaid(userId: number | undefined, id: number) {
+    const where: any = { utang_id: id };
+    if (typeof userId === 'number') where.user_id = userId;
+
+    const utang = await this.utangRepo.findOneBy(where);
     if (!utang) throw new NotFoundException('Utang not found');
 
     utang.is_paid = !utang.is_paid;
     return this.utangRepo.save(utang);
   }
 
-  async remove(id: number) {
-    const utang = await this.utangRepo.findOne({
-      where: { utang_id: id },
-      relations: ['items'],
-    });
+  async remove(userId: number | undefined, id: number) {
+    const where: any = { utang_id: id };
+    if (typeof userId === 'number') where.user_id = userId;
+
+    const utang = await this.utangRepo.findOne({ where, relations: ['items'] });
 
     if (!utang) throw new NotFoundException('Utang not found');
 

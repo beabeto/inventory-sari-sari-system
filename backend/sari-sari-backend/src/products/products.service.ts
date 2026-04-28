@@ -15,10 +15,13 @@ export class ProductsService {
     private categoryRepo: Repository<Category>,
   ) {}
 
-  async findAll(categoryId?: number) {
+  async findAll(user: any, categoryId?: number) {
     const query = this.repo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.category', 'category');
+
+    // All users (including 'admin' username) see only their own products
+    query.where('p.user_id = :userId', { userId: user?.userId || 0 });
 
     if (categoryId) {
       query.andWhere('p.category_id = :categoryId', { categoryId });
@@ -36,7 +39,7 @@ export class ProductsService {
     }));
   }
 
-  async create(data: {
+  async create(user: any, data: {
   name: string;
   price: number;
   stock: number;
@@ -50,18 +53,21 @@ export class ProductsService {
     throw new NotFoundException('Category not found');
   }
 
-  const product = this.repo.create({
+    // Always assign created products to the creating user
+    const product = this.repo.create({
     name: data.name,
     price: data.price,
     stock: data.stock,
     category,
     category_id: data.category_id,
+      user_id: user?.userId,
   });
 
   return this.repo.save(product);
 }
 
   async update(
+    user: any,
     id: number,
     data: {
       name: string;
@@ -70,9 +76,9 @@ export class ProductsService {
       category_id: number;
     },
   ) {
-    const product = await this.repo.findOneBy({ product_id: id });
+    const product = await this.repo.findOneBy({ product_id: id, user_id: user?.userId });
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Product not found or access denied');
     }
 
     const category = await this.categoryRepo.findOneBy({
@@ -83,29 +89,30 @@ export class ProductsService {
       throw new NotFoundException('Category not found');
     }
 
-    product.name = data.name;
-    product.price = data.price;
-    product.stock = data.stock;
-    product.category = category;
-    product.category_id = data.category_id;
+  product.name = data.name;
+  product.price = data.price;
+  product.stock = data.stock;
+  product.category = category;
+  product.category_id = data.category_id;
 
     return this.repo.save(product);
   }
 
-  async remove(id: number) {
-    const product = await this.repo.findOneBy({ product_id: id });
+  async remove(user: any, id: number) {
+    const product = await this.repo.findOneBy({ product_id: id, user_id: user?.userId });
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Product not found or access denied');
     }
     return this.repo.remove(product);
   }
 
-  async getLowStock() {
-  return this.repo.find({
-    where: {
-      stock: LessThanOrEqual(5),
-    },
-    relations: ['category'],
-  });
-}
+  async getLowStock(user?: any) {
+    // Only include this user's low-stock products
+    return this.repo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.category', 'category')
+      .where('p.stock <= :lvl', { lvl: 5 })
+      .andWhere('p.user_id = :userId', { userId: user?.userId ?? 0 })
+      .getMany();
+  }
 }

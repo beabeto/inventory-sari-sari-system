@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import client from "../api/client";
 import {
   BarChart,
   Bar,
@@ -17,8 +17,6 @@ interface Product {
   price: number;
   stock: number;
 }
-
-const API_URL = "http://localhost:3000";
 
 const WEEK_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -56,13 +54,13 @@ export default function Sales() {
 
   /* ================= FETCH ================= */
   const fetchProducts = async () => {
-    const res = await axios.get(`${API_URL}/products`);
+    const res = await client.get(`/products`);
     setProducts(res.data || []);
   };
 
   const fetchSales = async () => {
     try {
-      const res = await axios.get(`${API_URL}/sales/today`);
+      const res = await client.get(`/sales/today`);
       const total = Number(res.data?.[0]?.total ?? 0);
       setSalesTotal(total);
     } catch {
@@ -75,22 +73,22 @@ export default function Sales() {
 
     if (mode === "daily") {
       const today = new Date().toISOString().split("T")[0];
-      url = `${API_URL}/sales/history/daily?date=${today}`;
+      url = `/sales/history/daily?date=${today}`;
     }
 
     if (mode === "weekly") {
-      url = `${API_URL}/sales/history/weekly`;
+      url = `/sales/history/weekly`;
     }
 
     if (mode === "monthly") {
-      url = `${API_URL}/sales/history/monthly?year=${new Date().getFullYear()}`;
+      url = `/sales/history/monthly?year=${new Date().getFullYear()}`;
     }
 
     if (mode === "yearly") {
-      url = `${API_URL}/sales/history/yearly`;
+      url = `/sales/history/yearly`;
     }
 
-    const res = await axios.get(url);
+    const res = await client.get(url);
     setHistoryData(res.data || []);
   };
 
@@ -104,7 +102,7 @@ export default function Sales() {
   const addSale = async () => {
     if (!selectedProductId || quantity <= 0) return;
 
-    await axios.post(`${API_URL}/sales/today`, {
+    await client.post(`/sales/today`, {
       product_id: selectedProductId,
       quantity,
     });
@@ -155,12 +153,10 @@ export default function Sales() {
     <div style={ui.wrapper}>
       <Sidebar activePage="sales" />
 
-      {/* MAIN */}
       <main style={ui.main}>
         <h1 style={ui.title}>Sales Dashboard</h1>
         <p style={ui.time}>🇵🇭 {phTime}</p>
 
-        {/* ACTIONS */}
         <div style={ui.actions}>
           {["daily", "weekly", "monthly", "yearly"].map((m) => (
             <button key={m} onClick={() => setMode(m as any)} style={ui.btn}>
@@ -173,7 +169,6 @@ export default function Sales() {
           </button>
         </div>
 
-        {/* CARDS */}
         <div style={ui.cards}>
           <div style={ui.card}>💰 ₱{totalSales.toFixed(2)}</div>
           <div style={ui.card}>📈 ₱{profit.toFixed(2)}</div>
@@ -181,7 +176,6 @@ export default function Sales() {
           <div style={ui.card}>⚠ {lowStock.length}</div>
         </div>
 
-        {/* CHART */}
         <div style={ui.chart}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData()}>
@@ -194,7 +188,6 @@ export default function Sales() {
           </ResponsiveContainer>
         </div>
 
-        {/* MODAL */}
         {showModal && (
           <div style={ui.modalBg}>
             <div style={ui.modal}>
@@ -231,43 +224,80 @@ export default function Sales() {
   );
 }
 
-
-/* ================= UI (UNCHANGED) ================= */
+/* ================= UI ================= */
 const ui: any = {
-  wrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
+  wrapper: {
+    display: "flex",
+    width: "100vw",
+    height: "100vh",
+    fontFamily: "'Inter', sans-serif",
+    overflow: "hidden",
+    background: "#f0f7ff",
+  },
   main: { flex: 1, padding: 20 },
   title: { fontSize: 26, fontWeight: 800, color: "#1e3a8a" },
   time: { color: "#64748b" },
   actions: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 15 },
-  btn: { background: "#16a34a",
+  btn: {
+    background: "#16a34a",
     color: "white",
     border: "none",
     padding: "10px",
     borderRadius: "8px",
     cursor: "pointer",
-    flex: 1, },
-  addBtn: { background: "#d1d5db",
+    flex: 1,
+  },
+  addBtn: {
+    background: "#d1d5db",
     color: "black",
     border: "none",
     padding: "10px",
     borderRadius: "8px",
     cursor: "pointer",
-    flex: 1, },
-  cards: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 },
-  card: { background: "white", padding: 15, borderRadius: 10, fontWeight: 600, color: "blue" },
-  chart: { height: 300, background: "white", padding: 10, borderRadius: 10, marginTop: 15 },
-  modalBg: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" },
-  modal: { background: "white",
+    flex: 1,
+  },
+  cards: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 10,
+  },
+  card: {
+    background: "white",
+    padding: 15,
+    borderRadius: 10,
+    fontWeight: 600,
+    color: "blue",
+  },
+  chart: {
+    height: 300,
+    background: "white",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 15,
+  },
+  modalBg: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modal: {
+    background: "white",
     padding: "25px",
     borderRadius: "15px",
     width: "400px",
     display: "flex",
     flexDirection: "column",
-    gap: "12px", },
-  input: { padding: "12px 15px",
+    gap: "12px",
+  },
+  input: {
+    padding: "12px 15px",
     borderRadius: "10px",
     border: "1px solid #dbeafe",
     fontSize: "14px",
     color: "black",
-    backgroundColor: "white", }
+    backgroundColor: "white",
+  },
 };

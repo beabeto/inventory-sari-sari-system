@@ -6,6 +6,7 @@ The frontend is built with React + TypeScript + Vite, and the backend is built w
 
 The system is designed to help manage:
 - user login and authentication
+- user registration
 - categories
 - products and stock
 - sales transactions
@@ -173,6 +174,7 @@ npx ts-node src/seed-user.ts
 
 ### Frontend routes
 - `/login`
+- `/register`
 - `/dashboard`
 - `/categories`
 - `/products`
@@ -182,6 +184,7 @@ npx ts-node src/seed-user.ts
 - `/account`
 
 ### Main backend API routes
+- `POST /auth/register`
 - `POST /auth/login`
 - `GET /dashboard`
 - `GET /dashboard/recent-today`
@@ -225,7 +228,9 @@ The login page is the entry point of the system. It allows store staff such as t
 
 Main features:
 - username and password form
+- register link for new users
 - backend authentication through `POST /auth/login`
+- account creation through `POST /auth/register`
 - token storage in browser `localStorage`
 - redirect to dashboard after successful login
 - basic protection for private pages

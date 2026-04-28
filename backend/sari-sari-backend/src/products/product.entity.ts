@@ -6,6 +6,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { User } from '../users/user.entity';
 
 @Entity('products')
 export class Product {
@@ -29,6 +30,13 @@ export class Product {
   // ✅ Foreign key
   @Column()
   category_id: number;
+
+  @Column({ nullable: true })
+  user_id?: number;
+
+  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 
   @ManyToOne(() => Category, (category) => category.products, {
     eager: true,

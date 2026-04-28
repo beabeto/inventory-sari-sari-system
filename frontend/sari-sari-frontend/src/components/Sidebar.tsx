@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import axios from "axios";
+import client from "../api/client";
 import {
   getStoredProfile,
   getToken,
@@ -47,11 +47,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
-        });
+        const res = await client.get(`/users/me`);
 
         const cachedProfile = getStoredProfile();
         const nextUser = {

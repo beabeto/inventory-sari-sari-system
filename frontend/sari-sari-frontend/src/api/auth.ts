@@ -40,6 +40,24 @@ export async function login(username: string, password: string): Promise<LoginRe
   }
 }
 
+export async function register(username: string, password: string) {
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const message = errorData?.message || 'Registration failed';
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 // LOGOUT
 export function logout() {
   localStorage.removeItem('token');

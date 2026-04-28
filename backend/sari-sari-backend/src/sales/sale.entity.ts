@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
 } from "typeorm";
 import { Product } from "../products/product.entity";
+import { User } from "../users/user.entity";
 
 @Entity("sales")
 export class Sale {
@@ -31,4 +32,11 @@ export class Sale {
 
   @CreateDateColumn()
   sale_date: Date;
+
+  @Column({ nullable: true })
+  user_id?: number;
+
+  @ManyToOne(() => User, { eager: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import client from "../api/client";
 import Sidebar from "../components/Sidebar";
 
 /* ===================== INTERFACES ===================== */
@@ -22,6 +22,8 @@ export default function Products() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [debugUser, setDebugUser] = useState<any>(null);
+  const [lastResp, setLastResp] = useState<any>(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -38,21 +40,31 @@ export default function Products() {
   const API_URL = "http://localhost:3000";
 
   useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setDebugUser(payload);
+      }
+    } catch (e) {}
+
     fetchCategories();
     fetchProducts();
   }, []);
 
   /* ===================== FETCH DATA ===================== */
   const fetchCategories = async () => {
-    const res = await axios.get(`${API_URL}/categories`);
+    const res = await client.get(`/categories`);
+    console.log("API /categories response", res.data);
+    setLastResp(res.data);
     setCategories(res.data);
   };
 
   const fetchProducts = async (catId?: number | null) => {
-    const url = catId
-      ? `${API_URL}/products?category_id=${catId}`
-      : `${API_URL}/products`;
-    const res = await axios.get(url);
+    const url = catId ? `/products?category_id=${catId}` : `/products`;
+    const res = await client.get(url);
+    console.log("API /products response", res.data);
+    setLastResp(res.data);
     setProducts(res.data);
   };
 
@@ -72,7 +84,7 @@ export default function Products() {
     }
 
     try {
-      await axios.post(`${API_URL}/products`, {
+      await client.post(`/products`, {
         name,
         stock,
         price,
@@ -100,7 +112,7 @@ export default function Products() {
     if (!selectedProduct || categoryId === null) return;
 
     try {
-      await axios.put(`${API_URL}/products/${selectedProduct.product_id}`, {
+      await client.put(`/products/${selectedProduct.product_id}`, {
         name,
         stock,
         price,
@@ -124,9 +136,7 @@ export default function Products() {
     if (!selectedProduct) return;
 
     try {
-      await axios.delete(
-        `${API_URL}/products/${selectedProduct.product_id}`
-      );
+      await client.delete(`/products/${selectedProduct.product_id}`);
       setShowDeleteModal(false);
       fetchProducts(selectedCategory);
     } catch (error: any) {
@@ -140,26 +150,18 @@ export default function Products() {
   );
 
   const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
-  const totalValue = products.reduce(
-    (sum, p) => sum + p.price * p.stock,
-    0
-  );
+  const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
 
   const getCategoryName = (category_id: number) => {
-    const category = categories.find(
-      (c) => c.category_id === category_id
-    );
+    const category = categories.find((c) => c.category_id === category_id);
     return category ? category.name : "Unknown";
   };
 
-  /* ===================== UI ===================== */
   return (
     <div style={ui.fullscreenWrapper}>
       <Sidebar activePage="products" />
 
-      {/* Main Content */}
       <main style={ui.mainContent}>
-        {/* Header */}
         <header style={ui.header}>
           <div>
             <h1 style={ui.title}>Products</h1>
@@ -187,7 +189,6 @@ export default function Products() {
           </div>
         </header>
 
-        {/* Action Bar */}
         <div style={ui.actionBar}>
           <div style={ui.addBox}>
             <button onClick={openAddModal} style={ui.btnPrimary}>
@@ -196,9 +197,7 @@ export default function Products() {
 
             <select
               onChange={(e) => {
-                const val = e.target.value
-                  ? Number(e.target.value)
-                  : null;
+                const val = e.target.value ? Number(e.target.value) : null;
                 setSelectedCategory(val);
                 fetchProducts(val);
               }}
@@ -230,7 +229,6 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Table */}
         <div style={ui.tableContainer}>
           <table style={ui.table}>
             <thead>
@@ -243,25 +241,35 @@ export default function Products() {
                 <th style={{ ...ui.th, textAlign: "right" }}>Actions</th>
               </tr>
             </thead>
+
             <tbody>
-  {filteredProducts.map((p) => (
-    <tr key={p.product_id} style={ui.tr}>
-      <td style={{ ...ui.td, ...ui.productName }}>{p.name}</td>
-      <td style={{ ...ui.td, ...ui.categoryText }}>
-        {p.categoryName || getCategoryName(p.category_id)}
-      </td>
-      <td style={{ ...ui.td, ...ui.priceText }}>₱{p.price.toFixed(2)}</td>
-      <td style={{ ...ui.td, ...ui.stockText }}>{p.stock}</td>
-      <td style={{ ...ui.td, ...ui.totalValueText }}>
-        ₱{(p.price * p.stock).toLocaleString()}
-      </td>
-      <td style={{ ...ui.td, textAlign: "right" }}>
-        <button style={ui.btnEdit} onClick={() => openEditModal(p)}>Edit</button>
-        <button style={ui.btnDelete} onClick={() => openDeleteModal(p)}>Delete</button>
-      </td>
-    </tr>
-  ))}
-</tbody>
+              {filteredProducts.map((p) => (
+                <tr key={p.product_id} style={ui.tr}>
+                  <td style={{ ...ui.td, ...ui.productName }}>{p.name}</td>
+                  <td style={{ ...ui.td, ...ui.categoryText }}>
+                    {p.categoryName || getCategoryName(p.category_id)}
+                  </td>
+                  <td style={{ ...ui.td, ...ui.priceText }}>
+                    ₱{p.price.toFixed(2)}
+                  </td>
+                  <td style={{ ...ui.td, ...ui.stockText }}>{p.stock}</td>
+                  <td style={{ ...ui.td, ...ui.totalValueText }}>
+                    ₱{(p.price * p.stock).toLocaleString()}
+                  </td>
+                  <td style={{ ...ui.td, textAlign: "right" }}>
+                    <button style={ui.btnEdit} onClick={() => openEditModal(p)}>
+                      Edit
+                    </button>
+                    <button
+                      style={ui.btnDelete}
+                      onClick={() => openDeleteModal(p)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
 
           {filteredProducts.length === 0 && (
@@ -288,9 +296,7 @@ export default function Products() {
             <select
               style={ui.input}
               value={categoryId ?? ""}
-              onChange={(e) =>
-                setCategoryId(Number(e.target.value))
-              }
+              onChange={(e) => setCategoryId(Number(e.target.value))}
             >
               <option value="">Select Category</option>
               {categories.map((c) => (
