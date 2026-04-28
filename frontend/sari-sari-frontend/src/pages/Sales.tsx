@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { logout } from "../api/auth";
+import Sidebar from "../components/Sidebar";
 
 interface Product {
   product_id: number;
@@ -151,31 +151,9 @@ export default function Sales() {
   const profit = totalSales * 0.3;
   const lowStock = products.filter((p) => p.stock <= 5);
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
-  };
-
   return (
     <div style={ui.wrapper}>
-      {/* SIDEBAR */}
-      <aside style={ui.sidebar}>
-        <h2 style={ui.logo}>Sari-Sari Store</h2>
-
-        <nav style={ui.nav}>
-          <a href="/dashboard" style={ui.link}>Dashboard</a>
-          <a href="/categories" style={ui.link}>Categories</a>
-          <a href="/products" style={ui.link}>Products</a>
-          <a href="/sales" style={{ ...ui.link, ...ui.active }}>Sales</a>
-          <a href="/utang" style={ui.link}>Utang</a>
-          <a href="/expenses" style={ui.link}>Expenses</a>
-          <a href="/account" style={ui.link}>Account Settings</a>
-        </nav>
-
-        <button style={ui.logoutBtn} onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
+      <Sidebar activePage="sales" />
 
       {/* MAIN */}
       <main style={ui.main}>
@@ -257,12 +235,6 @@ export default function Sales() {
 /* ================= UI (UNCHANGED) ================= */
 const ui: any = {
   wrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
-  sidebar: { width: "240px", background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
-  logo: { fontSize: "22px", fontWeight: 800, textAlign: "center", marginBottom: "40px" },
-  nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  link: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px" },
-  active: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { marginTop: 20, padding: 10, background: "#7c3aed", color: "white" },
   main: { flex: 1, padding: 20 },
   title: { fontSize: 26, fontWeight: 800, color: "#1e3a8a" },
   time: { color: "#64748b" },

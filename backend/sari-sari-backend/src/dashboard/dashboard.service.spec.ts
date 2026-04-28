@@ -6,6 +6,7 @@ import { Product } from '../products/product.entity';
 import { Sale } from '../sales/sale.entity';
 import { Utang } from '../utang/utang.entity';
 import { Expense } from '../expenses/expenses.entity';
+import { Category } from '../categories/category.entity';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -19,6 +20,7 @@ describe('DashboardService', () => {
         { provide: getRepositoryToken(Sale), useValue: {} },
         { provide: getRepositoryToken(Utang), useValue: {} },
         { provide: getRepositoryToken(Expense), useValue: {} },
+        { provide: getRepositoryToken(Category), useValue: {} },
       ],
     }).compile();
 

@@ -12,7 +12,7 @@ Add a user profile image that appears in the sidebar on all authenticated pages 
 ## Scope
 - Persist one profile image value per user in the backend database.
 - Expose the profile image through the authenticated user profile endpoint.
-- Allow the Account Settings page to load, edit, and save the profile image.
+- Allow the Account Settings page to load, pick, preview, clear, and save the profile image.
 - Show the saved profile image in the sidebar across:
   - Dashboard
   - Categories
@@ -23,7 +23,7 @@ Add a user profile image that appears in the sidebar on all authenticated pages 
   - Account Settings
 
 ## Non-Goals
-- File upload support
+- Multipart backend file upload storage
 - Image cropping, resizing, or compression
 - Multiple profile images
 - Public profile pages
@@ -32,7 +32,7 @@ Add a user profile image that appears in the sidebar on all authenticated pages 
 - `SSIMS-PROFILE-001`: The system must persist a profile image string for each user.
 - `SSIMS-PROFILE-002`: `GET /users/me` must return the authenticated user's profile image together with the existing profile fields.
 - `SSIMS-PROFILE-003`: `PUT /users/update-profile` must allow updating the profile image without requiring a password change.
-- `SSIMS-PROFILE-004`: The Account Settings page must let the user edit and save the profile image value.
+- `SSIMS-PROFILE-004`: The Account Settings page must let the user pick an image file, preview it, and save the profile image value.
 - `SSIMS-PROFILE-005`: All authenticated page sidebars must display the saved profile image and current username.
 - `SSIMS-PROFILE-006`: If no profile image is set, the sidebar must show a safe fallback avatar state instead of a broken image.
 
@@ -46,7 +46,7 @@ Response:
   "id": 1,
   "username": "admin",
   "role": "admin",
-  "profileImage": "https://example.com/avatar.jpg"
+  "profileImage": "data:image/png;base64,..."
 }
 ```
 
@@ -56,7 +56,7 @@ Request payload:
 ```json
 {
   "username": "admin",
-  "profileImage": "https://example.com/avatar.jpg"
+  "profileImage": "data:image/png;base64,..."
 }
 ```
 
@@ -70,25 +70,33 @@ Response:
 
 ## UI Behavior
 - The sidebar must render the user image above or near the navigation items.
+- The sidebar profile block must be clickable and take the user to Account Settings from any authenticated page.
 - The sidebar must render the username from the authenticated profile.
+- The sidebar avatar should be visually prominent enough to be noticed quickly.
 - The Account Settings page must preload the current username and profile image.
+- The Account Settings page must support choosing an image file from the device.
+- The Account Settings page must preview the chosen image before save.
 - Saving account settings must update the sidebar-rendered profile state after a successful request.
 
 ## Validation
 - Username remains required when updating the profile.
 - Profile image is optional.
+- Picked files must be image files.
 - An empty profile image value clears the saved image and reverts the UI to the fallback avatar state.
 
 ## Edge Cases
 - Authenticated request succeeds but the user has no profile image.
+- The user picks a file and does not save it.
+- The user clears the selected image before saving.
 - The profile image URL is invalid or fails to load in the browser.
 - The backend returns an older user record without a profile image value.
 - The update request changes username only.
 - The update request changes profile image only while preserving the existing username value.
 
 ## Acceptance Criteria
-- A logged-in user can open Account Settings, enter a profile image value, save it, and see the image appear in the sidebar.
+- A logged-in user can open Account Settings, pick an image file, save it, and see the image appear in the sidebar.
 - The saved profile image remains visible after navigation to other authenticated pages.
+- Clicking the sidebar profile block from any authenticated page opens Account Settings.
 - Clearing the profile image removes the image and shows the fallback avatar state.
 - Existing username update behavior still works.
 - Password change behavior remains unchanged.

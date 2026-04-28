@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { logout } from "../api/auth";
+import Sidebar from "../components/Sidebar";
 
 import {
   LineChart,
@@ -151,28 +151,7 @@ export default function Dashboard() {
 
   return (
     <div style={ui.fullscreenWrapper}>
-      {/* SIDEBAR */}
-      <aside style={ui.sidebar}>
-        <div>
-          <div style={ui.logo}>Sari-sari Store</div>
-
-          <nav style={ui.nav}>
-            <a href="/dashboard" style={{ ...ui.navItem, ...ui.navActive }}>
-              Dashboard
-            </a>
-            <a href="/categories" style={ui.navItem}>Categories</a>
-            <a href="/products" style={ui.navItem}>Products</a>
-            <a href="/sales" style={ui.navItem}>Sales</a>
-            <a href="/utang" style={ui.navItem}>Utang</a>
-            <a href="/expenses" style={ui.navItem}>Expenses</a>
-            <a href="/account" style={ui.navItem}>Account Settings</a>
-          </nav>
-        </div>
-
-        <button style={ui.logoutBtn} onClick={logout}>
-          Logout
-        </button>
-      </aside>
+      <Sidebar activePage="dashboard" />
 
       {/* MAIN */}
       <main style={ui.mainContent}>
@@ -321,12 +300,6 @@ export default function Dashboard() {
 /* ================= UI ================= */
 const ui: any = {
   fullscreenWrapper: { display: "flex", width: "100vw", height: "100vh", fontFamily: "'Inter', sans-serif", overflow: "hidden", background: "#f0f7ff" },
-  sidebar: { width: "240px", background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)", color: "white", padding: "30px 20px", display: "flex", flexDirection: "column", justifyContent: "space-between" },
-  logo: { fontSize: "22px", fontWeight: 800, textAlign: "center", marginBottom: "40px" },
-  nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navItem: { padding: "12px 15px", color: "#bfdbfe", textDecoration: "none", borderRadius: "10px" },
-  navActive: { background: "rgba(255,255,255,0.15)", color: "#fff", fontWeight: 600 },
-  logoutBtn: { padding: "12px", background: "#644ceb", color: "white", borderRadius: "10px", border: "none" },
   mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
   header: { display: "flex", justifyContent: "space-between", marginBottom: "30px" },
   title: { fontSize: "28px", color: "#1e3a8a", fontWeight: 800 },

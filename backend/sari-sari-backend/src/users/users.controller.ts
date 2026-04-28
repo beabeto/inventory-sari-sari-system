@@ -29,6 +29,7 @@ export class UsersController {
     return this.usersService.updateProfile(
       req.user.userId,
       body.username,
+      body.profileImage,
     );
   }
 

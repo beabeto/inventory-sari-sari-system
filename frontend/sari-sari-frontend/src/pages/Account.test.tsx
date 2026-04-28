@@ -1,13 +1,16 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import axios from 'axios';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import Account from './Account';
 
-jest.mock('axios');
+vi.mock('axios');
 
-jest.mock('../api/auth', () => ({
+vi.mock('../api/auth', () => ({
   getToken: () => 'token',
-  logout: jest.fn(),
+  getStoredProfile: () => null,
+  setStoredProfile: vi.fn(),
+  logout: vi.fn(),
 }));
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -18,8 +21,8 @@ describe('Account Page', () => {
     mockedAxios.put.mockReset();
   });
 
-  test('SSIMS-PROFILE-004 loads and saves the profile image field', async () => {
-    mockedAxios.get.mockResolvedValueOnce({
+  test('SSIMS-PROFILE-004 loads and saves the picked profile image file', async () => {
+    mockedAxios.get.mockResolvedValue({
       data: {
         id: 1,
         username: 'admin',
@@ -40,12 +43,28 @@ describe('Account Page', () => {
       </MemoryRouter>,
     );
 
-    const profileImageInput = await screen.findByPlaceholderText(/enter profile image url/i);
-    expect(profileImageInput).toHaveValue('https://example.com/old-avatar.png');
+    expect(await screen.findByAltText(/profile preview/i)).toBeInTheDocument();
 
-    fireEvent.change(profileImageInput, {
-      target: { value: 'https://example.com/new-avatar.png' },
+    const fileInput = screen.getByLabelText(/profile image file/i, {
+      selector: 'input',
     });
+
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
+    const originalFileReader = globalThis.FileReader;
+    class MockFileReader {
+      result: string | null = null;
+      onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
+
+      readAsDataURL() {
+        this.result = 'data:image/png;base64,new-avatar';
+        this.onload?.(new ProgressEvent('load') as ProgressEvent<FileReader>);
+      }
+    }
+
+    // @ts-expect-error test shim
+    globalThis.FileReader = MockFileReader;
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     fireEvent.click(screen.getByRole('button', { name: /save profile/i }));
 
@@ -54,7 +73,7 @@ describe('Account Page', () => {
         'http://localhost:3000/users/update-profile',
         {
           username: 'admin',
-          profileImage: 'https://example.com/new-avatar.png',
+          profileImage: 'data:image/png;base64,new-avatar',
         },
         {
           headers: {
@@ -63,5 +82,7 @@ describe('Account Page', () => {
         },
       );
     });
+
+    globalThis.FileReader = originalFileReader;
   });
 });

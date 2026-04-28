@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { logout } from "../api/auth";
+import Sidebar from "../components/Sidebar";
 
 /* ================= INTERFACES ================= */
 interface Product {
@@ -38,12 +38,6 @@ export default function UtangPage() {
   const [selectedProduct, setSelectedProduct] = useState<number | "">("");
   const [quantity, setQuantity] = useState(1);
   const [items, setItems] = useState<UtangItem[]>([]);
-
-  /* ================= LOGOUT ================= */
-  const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
-  };
 
   /* ================= FETCH ================= */
   const fetchUtang = async () => {
@@ -148,26 +142,7 @@ export default function UtangPage() {
 
   return (
     <div style={ui.fullscreenWrapper}>
-      {/* SIDEBAR */}
-      <aside style={ui.sidebar}>
-        <div>
-          <div style={ui.logo}> Sari-sari Store</div>
-
-          <nav style={ui.nav}>
-            <a href="/dashboard" style={ui.navItem}>Dashboard</a>
-            <a href="/categories" style={ui.navItem}>Categories</a>
-            <a href="/products" style={ui.navItem}>Products</a>
-            <a href="/sales" style={ui.navItem}>Sales</a>
-            <a href="/utang" style={{ ...ui.navItem, ...ui.navActive }}>Utang</a>
-            <a href="/expenses" style={ui.navItem}>Expenses</a>
-            <a href="/account" style={ui.navItem}>Account Settings</a>
-          </nav>
-        </div>
-
-        <button style={ui.logoutBtn} onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
+      <Sidebar activePage="utang" />
 
       {/* MAIN */}
       <main style={ui.mainContent}>
@@ -315,42 +290,6 @@ const ui: { [key: string]: React.CSSProperties } = {
     fontFamily: "'Inter', sans-serif",
     overflow: "hidden",
     background: "#f0f7ff",
-  },
-  sidebar: {
-    width: "240px",
-    background: "linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)",
-    color: "white",
-    padding: "30px 20px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  },
-  logo: {
-    fontSize: "22px",
-    fontWeight: 800,
-    textAlign: "center",
-    marginBottom: "40px",
-  },
-  nav: { display: "flex", flexDirection: "column", gap: "8px" },
-
-  navItem: {
-    padding: "12px 15px",
-    color: "#bfdbfe",
-    textDecoration: "none",
-    borderRadius: "10px",
-  },
-
-  navActive: {
-    background: "rgba(255,255,255,0.15)",
-    color: "#fff",
-    fontWeight: 600,
-  },
-  logoutBtn: {
-    padding: "12px",
-    background: "#644ceb",
-    color: "white",
-    borderRadius: "10px",
-    border: "none",
   },
   mainContent: { flex: 1, padding: "40px", overflowY: "auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" },
