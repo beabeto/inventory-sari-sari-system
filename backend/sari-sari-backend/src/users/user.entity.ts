@@ -13,4 +13,7 @@ export class User {
 
   @Column({ default: 'admin' })
   role: string;
+
+  @Column({ name: 'profile_image', nullable: true, type: 'longtext' })
+  profileImage: string | null;
 }

@@ -1,7 +1,13 @@
 const API_URL = 'http://localhost:3000';
+const PROFILE_STORAGE_KEY = 'current_user_profile';
 
 interface LoginResponse {
   access_token: string;
+}
+
+export interface StoredProfile {
+  username: string;
+  profileImage: string | null;
 }
 
 // LOGIN
@@ -37,6 +43,7 @@ export async function login(username: string, password: string): Promise<LoginRe
 // LOGOUT
 export function logout() {
   localStorage.removeItem('token');
+  localStorage.removeItem(PROFILE_STORAGE_KEY);
 }
 
 // GET TOKEN
@@ -55,4 +62,20 @@ export function authHeader() {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
+}
+
+export function getStoredProfile(): StoredProfile | null {
+  const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as StoredProfile;
+  } catch {
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
+    return null;
+  }
+}
+
+export function setStoredProfile(profile: StoredProfile) {
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
 }

@@ -30,14 +30,25 @@ export class UsersService {
       id: user.id,
       username: user.username,
       role: user.role,
+      profileImage: user.profileImage ?? null,
     };
   }
 
-  async updateProfile(userId: number, username: string) {
+  async updateProfile(
+    userId: number,
+    username: string,
+    profileImage?: string | null,
+  ) {
     const user = await this.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     user.username = username;
+
+    if (profileImage !== undefined) {
+      const trimmed = typeof profileImage === 'string' ? profileImage.trim() : '';
+      user.profileImage = trimmed || null;
+    }
+
     await this.repo.save(user);
 
     return { message: 'Profile updated successfully' };
@@ -69,6 +80,7 @@ export class UsersService {
       username,
       password: hashed,
       role: 'admin',
+      profileImage: null,
     });
 
     return this.repo.save(user);
