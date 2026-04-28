@@ -1,5 +1,5 @@
-# Sari-Sari Store Inventory Management System
 
+# Sari-Sari Store Inventory Management System
 This project is a full-stack inventory management system for a sari-sari store.
 
 The frontend is built with React + TypeScript + Vite, and the backend is built with NestJS + TypeORM + MySQL.
@@ -351,7 +351,9 @@ The account settings page lets the logged-in user manage account information and
 Main features:
 - update username
 - change password
-- planned support for profile image editing and saving
+- update and save a profile image URL
+- pick a profile image file from the device and save it
+- display the saved profile image in the sidebar on authenticated pages
 - send authenticated requests with Bearer token
 - show success and error feedback
 - clear form after successful update
@@ -383,9 +385,16 @@ Requirement IDs:
 Feature summary:
 
 - show a profile image on every authenticated page sidebar
-- allow the image to be edited in Account Settings
+- allow the image to be picked in Account Settings
 - persist the image through the backend user profile
 - show a fallback avatar state when no image is saved
+
+Implementation status:
+
+- backend user profile now supports `profileImage`
+- `GET /users/me` returns the current profile image
+- `PUT /users/update-profile` accepts profile image updates
+- all authenticated page sidebars now use the shared profile display
 
 ## Spec-First Workflow For This Feature
 
