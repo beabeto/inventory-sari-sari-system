@@ -351,6 +351,7 @@ The account settings page lets the logged-in user manage account information and
 Main features:
 - update username
 - change password
+- planned support for profile image editing and saving
 - send authenticated requests with Bearer token
 - show success and error feedback
 - clear form after successful update
@@ -359,6 +360,86 @@ Why this matters:
 - improves account security
 - lets the user maintain their own profile
 - supports safer long-term use of the system
+
+## Current Small Feature Spec
+
+For the current software engineering exercise, the selected small feature is:
+
+- `Profile Image In Sidebar And Account Settings`
+
+Spec file:
+
+- `myspecs/spec-profile-image-sidebar.md`
+
+Requirement IDs:
+
+- `SSIMS-PROFILE-001`
+- `SSIMS-PROFILE-002`
+- `SSIMS-PROFILE-003`
+- `SSIMS-PROFILE-004`
+- `SSIMS-PROFILE-005`
+- `SSIMS-PROFILE-006`
+
+Feature summary:
+
+- show a profile image on every authenticated page sidebar
+- allow the image to be edited in Account Settings
+- persist the image through the backend user profile
+- show a fallback avatar state when no image is saved
+
+## Spec-First Workflow For This Feature
+
+Follow this order for the exercise:
+
+1. Draft and review the spec in `myspecs/spec-profile-image-sidebar.md`
+2. Mark the spec accepted before implementation
+3. Add tests that reference the requirement IDs
+4. Implement the backend and frontend changes
+5. Run verification commands
+6. Review the diff before committing
+7. Open a PR that references the spec path and requirement IDs
+
+## Git Workflow Commands
+
+Use these commands as a copy-paste starting point for the exercise:
+
+```powershell
+cd inventory-sari-sari-system
+git status
+git checkout main
+git pull origin main
+git checkout -b feat/profile-image-sidebar
+```
+
+After you review the spec and start implementation:
+
+```powershell
+git status
+git add myspecs/spec-profile-image-sidebar.md README.md
+git commit -m "docs: add accepted spec for sidebar profile image"
+```
+
+After code and tests are finished:
+
+```powershell
+cd backend\sari-sari-backend
+npm test
+
+cd ..\..\frontend\sari-sari-frontend
+npm test
+
+cd ..\..
+git status
+git diff
+git add .
+git commit -m "feat: add sidebar profile image support"
+git push -u origin feat/profile-image-sidebar
+```
+
+Suggested PR references:
+
+- Spec: `myspecs/spec-profile-image-sidebar.md`
+- Requirements: `SSIMS-PROFILE-001` to `SSIMS-PROFILE-006`
 
 ## Suggested Development Order
 
