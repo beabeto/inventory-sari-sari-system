@@ -134,7 +134,6 @@ export default function Categories() {
           <table style={ui.table}>
             <thead>
               <tr style={ui.thead}>
-                <th style={ui.th}>ID</th>
                 <th style={ui.th}>Category Name</th>
                 <th style={ui.th}>Products Count</th>
                 <th style={ui.th}>Stock Count</th>
@@ -148,9 +147,7 @@ export default function Categories() {
             <tbody>
               {filteredCategories.map((cat) => (
                 <tr key={cat.category_id} style={ui.tr}>
-                  <td style={{ ...ui.td, color: "#2563eb" }}>
-                    #{cat.category_id}
-                  </td>
+                
 
                   <td style={{ ...ui.td, color: "#1e3a8a" }}>
                     {editingId === cat.category_id ? (
