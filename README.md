@@ -73,53 +73,105 @@ Note:
 - The backend currently uses `synchronize: true`, so TypeORM will create/update tables automatically during development.
 - If your MySQL credentials are different, update `src/app.module.ts` before starting the backend.
 
-## Installation
+## Step-By-Step Installation And Setup
 
-Install dependencies separately for the frontend and backend.
+Follow these steps from the main project folder.
 
-### 1. Install frontend dependencies
+### 1. Open the project folder
 
 ```powershell
-cd inventory-sari-sari-system\frontend\sari-sari-frontend
+cd inventory-sari-sari-system
+```
+
+### 2. Create the MySQL database
+
+Log in to MySQL, then run:
+
+```sql
+CREATE DATABASE sari_sari_db;
+```
+
+### 3. Check the backend database credentials
+
+Open:
+
+```text
+backend/sari-sari-backend/src/app.module.ts
+```
+
+Make sure these values match your local MySQL setup:
+
+```ts
+host: 'localhost'
+port: 3306
+username: 'beto'
+password: 'beto2004'
+database: 'sari_sari_db'
+```
+
+### 4. Install backend dependencies
+
+```powershell
+cd backend\sari-sari-backend
 npm install
 ```
 
-### 2. Install backend dependencies
+### 5. Start the backend
+
+Keep this terminal open:
 
 ```powershell
-cd inventory-sari-sari-system\backend\sari-sari-backend
-npm install
-```
-
-## How To Run The Project
-
-You need to run the backend and frontend in separate terminals.
-
-### Run the backend
-
-```powershell
-cd inventory-sari-sari-system\backend\sari-sari-backend
 npm run start:dev
 ```
 
-Backend default URL:
+Backend URL:
 
 ```text
 http://localhost:3000
 ```
 
-### Run the frontend
+### 6. Optional: seed the default login user
+
+Open a new terminal from the main project folder, then run:
 
 ```powershell
-cd inventory-sari-sari-system\frontend\sari-sari-frontend
+cd backend\sari-sari-backend
+npx ts-node src/seed-user.ts
+```
+
+Default account:
+
+```text
+username: admin
+password: admin123
+```
+
+### 7. Install frontend dependencies
+
+Open another terminal from the main project folder, then run:
+
+```powershell
+cd frontend\sari-sari-frontend
+npm install
+```
+
+### 8. Start the frontend
+
+Keep this terminal open:
+
+```powershell
 npm run dev
 ```
 
-Frontend default URL with Vite is usually:
+Frontend URL:
 
 ```text
 http://localhost:5173
 ```
+
+### 9. Use the app
+
+Open the frontend URL in your browser and log in with the seeded account, or register a new user from the register page.
 
 ## How To Compile / Build
 
@@ -146,28 +198,6 @@ Then run:
 
 ```powershell
 npm run build
-```
-
-## Seed Default Login User
-
-There is a seed file in the backend:
-
-```text
-backend/sari-sari-backend/src/seed-user.ts
-```
-
-It creates this default account if it does not already exist:
-
-```text
-username: admin
-password: admin123
-```
-
-To run the seed manually:
-
-```powershell
-cd inventory-sari-sari-system\backend\sari-sari-backend
-npx ts-node src/seed-user.ts
 ```
 
 ## Current Routes
@@ -372,40 +402,42 @@ Why this matters:
 
 For the current software engineering exercise, the selected small feature is:
 
-- `Profile Image In Sidebar And Account Settings`
+- `Category Management Page And Backend API`
 
 Spec file:
 
-- `myspecs/spec-profile-image-sidebar.md`
+- `myspecs/spec-categories-page.md`
+
+Previous draft:
+
+- `myspecs/draft-spec-categories-page.md`
 
 Requirement IDs:
 
-- `SSIMS-PROFILE-001`
-- `SSIMS-PROFILE-002`
-- `SSIMS-PROFILE-003`
-- `SSIMS-PROFILE-004`
-- `SSIMS-PROFILE-005`
-- `SSIMS-PROFILE-006`
+- `SSIMS-CATEGORY-001` to `SSIMS-CATEGORY-024`
 
 Feature summary:
 
-- show a profile image on every authenticated page sidebar
-- allow the image to be picked in Account Settings
-- persist the image through the backend user profile
-- show a fallback avatar state when no image is saved
+- load the logged-in user's categories on page open
+- add new categories from the page action bar
+- search categories by name in the frontend
+- edit category names inline
+- delete categories after browser confirmation
+- show product count and stock count columns
+- protect category backend routes with JWT authentication
+- keep category create, update, delete, and list operations scoped to the authenticated user
 
 Implementation status:
 
-- backend user profile now supports `profileImage`
-- `GET /users/me` returns the current profile image
-- `PUT /users/update-profile` accepts profile image updates
-- all authenticated page sidebars now use the shared profile display
+- the new spec is based on the current frontend `Categories.tsx` page and backend categories module
+- the previous category page spec has been renamed as a draft
+- backend API behavior is included in the category spec
 
 ## Spec-First Workflow For This Feature
 
 Follow this order for the exercise:
 
-1. Draft and review the spec in `myspecs/spec-profile-image-sidebar.md`
+1. Draft and review the spec in `myspecs/spec-categories-page.md`
 2. Mark the spec accepted before implementation
 3. Add tests that reference the requirement IDs
 4. Implement the backend and frontend changes
@@ -422,38 +454,39 @@ cd inventory-sari-sari-system
 git status
 git checkout main
 git pull origin main
-git checkout -b feat/profile-image-sidebar
+git checkout -b feat/category-page
 ```
 
 After you review the spec and start implementation:
 
 ```powershell
 git status
-git add myspecs/spec-profile-image-sidebar.md README.md
-git commit -m "docs: add accepted spec for sidebar profile image"
+git add myspecs/spec-categories-page.md myspecs/draft-spec-categories-page.md README.md
+git commit -m "docs: add category page spec"
 ```
 
 After code and tests are finished:
 
 ```powershell
-cd backend\sari-sari-backend
+cd frontend\sari-sari-frontend
 npm test
 
-cd ..\..\frontend\sari-sari-frontend
+cd ..\..\backend\sari-sari-backend
 npm test
 
 cd ..\..
 git status
 git diff
 git add .
-git commit -m "feat: add sidebar profile image support"
-git push -u origin feat/profile-image-sidebar
+git commit -m "feat: update category page"
+git push -u origin feat/category-page
 ```
 
 Suggested PR references:
 
-- Spec: `myspecs/spec-profile-image-sidebar.md`
-- Requirements: `SSIMS-PROFILE-001` to `SSIMS-PROFILE-006`
+- Spec: `myspecs/spec-categories-page.md`
+- Previous draft: `myspecs/draft-spec-categories-page.md`
+- Requirements: `SSIMS-CATEGORY-001` to `SSIMS-CATEGORY-024`
 
 ## Suggested Development Order
 
